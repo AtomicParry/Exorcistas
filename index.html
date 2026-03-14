@@ -671,6 +671,44 @@ body {
 /* center card spans full row */
 .bcard-full { grid-column: 1 / -1; }
 
+
+/* ── CHAR MANAGER ── */
+.char-list-item {
+  display:flex; align-items:center; gap:10px;
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--radius); padding:10px 12px;
+  cursor:pointer; transition:border-color 0.2s, background 0.2s;
+}
+.char-list-item:hover { border-color:var(--border2); background:var(--bg3); }
+.char-list-item.active-char {
+  border-color:var(--accent2);
+  background:rgba(139,0,0,0.12);
+}
+.char-item-name {
+  flex:1; font-family:'Cinzel',serif; font-size:11px;
+  font-weight:600; letter-spacing:2px; color:var(--text);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.char-list-item.active-char .char-item-name { color:var(--accent3); }
+.char-item-saved {
+  font-family:'Share Tech Mono',monospace; font-size:9px;
+  color:var(--text3); white-space:nowrap;
+}
+.char-item-active-badge {
+  font-family:'Cinzel',serif; font-size:8px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  background:var(--accent); color:#fff;
+  padding:2px 6px; border-radius:2px; white-space:nowrap;
+}
+.char-delete-btn {
+  background:none; border:1px solid var(--red);
+  border-radius:var(--radius); color:#f87171;
+  font-size:13px; width:28px; height:28px;
+  cursor:pointer; display:flex; align-items:center;
+  justify-content:center; flex-shrink:0;
+  transition:background 0.2s, border-color 0.2s;
+}
+.char-delete-btn:hover { background:rgba(220,38,38,0.15); border-color:var(--red3); }
 </style>
 </head>
 <body>
@@ -703,10 +741,8 @@ body {
 <!-- ACTION BAR -->
 <div class="action-bar">
   <div style="display:flex;align-items:center;gap:6px;">
-    <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;">Ficha:</span>
-    <select class="char-select" id="char-select" onchange="switchChar(this.value)"></select>
-    <button class="action-btn" onclick="newChar()">+ Nova</button>
-    <button class="action-btn danger" onclick="deleteChar()">Apagar</button>
+    <button class="action-btn primary" onclick="openCharModal()">&#9776; Fichas</button>
+    <span class="save-status" id="char-name-display" style="font-family:'Cinzel',serif;font-size:10px;color:var(--text2);letter-spacing:1px;"></span>
   </div>
   <div class="action-sep"></div>
   <span class="save-status" id="save-status">—</span>
@@ -726,6 +762,31 @@ body {
     <div class="modal-actions">
       <button class="action-btn" onclick="closeShareModal()">Fechar</button>
       <button class="action-btn primary" onclick="copyShareUrl()">Copiar Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHAR MANAGER MODAL -->
+<div class="modal-bg" id="char-modal" onclick="if(event.target===this)closeCharModal()">
+  <div class="modal" style="max-width:500px;width:94%;">
+    <div class="modal-title">&#9776; Gerenciar Fichas</div>
+    <div id="char-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;max-height:340px;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="action-btn" onclick="closeCharModal()">Fechar</button>
+      <button class="action-btn primary" onclick="newCharFromModal()">+ Nova Ficha</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-bg" id="del-modal" onclick="if(event.target===this)closeDelModal()">
+  <div class="modal" style="max-width:380px;width:90%;text-align:center;">
+    <div style="font-size:32px;margin-bottom:10px;">🗑</div>
+    <div class="modal-title" style="justify-content:center;">Apagar Ficha?</div>
+    <p style="font-family:'Crimson Text',serif;font-size:15px;color:var(--text2);margin-bottom:20px;" id="del-modal-name"></p>
+    <div class="modal-actions" style="justify-content:center;gap:12px;">
+      <button class="action-btn" onclick="closeDelModal()" style="padding:7px 20px;">Cancelar</button>
+      <button class="action-btn danger" id="del-confirm-btn" style="padding:7px 20px;font-size:10px;">Apagar</button>
     </div>
   </div>
 </div>
@@ -1439,119 +1500,257 @@ function updateInjury(part, cond) {
 })();
 
 /* ════ SAVE / LOAD / SHARE ════ */
-const STORE_KEY='ndm_chars2', ACTIVE_KEY='ndm_active2';
-let activeId=null, saveTimer=null;
+const STORE_KEY='ndm_chars3', ACTIVE_KEY='ndm_active3';
+let activeId=null, saveTimer=null, _saving_locked=false;
 
+/* ── STORAGE ── */
 function collectData() {
   const d={};
-  d.xp = document.getElementById('xp-total').value;
+  d.xp = document.getElementById('xp-total')?.value||'0';
   d.photo = photoData;
-  ['nome','origem','idade','ocup','jogador','patente','aparencia'].forEach(k=>{
-    const el=document.getElementById('f-'+k); if(el) d['f_'+k]=el.tagName==='TEXTAREA'?el.value:el.value||el.options?.[el.selectedIndex]?.value||'';
+  ['nome','idade','ocup','jogador','patente','aparencia'].forEach(k=>{
+    const el=document.getElementById('f-'+k);
+    if(el) d['f_'+k] = el.value;
   });
-  d.f_origem = document.getElementById('f-origem')?.value;
-  ['agil','cons','conh','for','int'].forEach(k=>d['attr_'+k]=document.getElementById('attr-'+k)?.value);
-  ['vit','ener','sang','medo'].forEach(k=>d['perd_'+k]=document.getElementById(k+'-perd')?.value);
-  d.comps = Array.from(document.querySelectorAll('[data-idx]')).map(e=>e.value);
+  d.f_origem = document.getElementById('f-origem')?.value||'';
+  ['agil','cons','conh','for','int'].forEach(k=>{
+    d['attr_'+k] = document.getElementById('attr-'+k)?.value||'1';
+  });
+  ['vit','ener','sang','medo'].forEach(k=>{
+    d['perd_'+k] = document.getElementById(k+'-perd')?.value||'0';
+  });
+  d.comps   = Array.from(document.querySelectorAll('[data-idx]')).map(e=>e.value);
   d.compmod = Array.from(document.querySelectorAll('[data-modif]')).map(e=>e.value);
-  d.conds = Array.from(document.querySelectorAll('.bcard-select')).map(e=>e.value);
-  d.bodyarmor = Array.from(document.querySelectorAll('.body-armor')).map(e=>({val:e.value,base:e.getAttribute('data-base')}));
-  d.absorcao = document.getElementById('absorcao-geral')?.value;
-  d.qd = Array.from(document.querySelectorAll('.qd-textarea')).map(e=>e.value);
-  d.weapons = Array.from(document.querySelectorAll('#weapons-body tr')).map(tr=>Array.from(tr.querySelectorAll('input,select')).map(e=>e.value));
-  d.inv = Array.from(document.querySelectorAll('#inv-body tr')).map(tr=>Array.from(tr.querySelectorAll('input,textarea')).map(e=>e.value));
-  d.hab = Array.from(document.querySelectorAll('#hab-body tr')).map(tr=>Array.from(tr.querySelectorAll('input,textarea')).map(e=>e.value));
-  d.dinheiro = document.getElementById('dinheiro')?.value;
-  d.esp = Array.from(document.querySelectorAll('.stat-box-val')).map(e=>e.value);
-  d.notas_gerais = document.getElementById('notas-gerais')?.value;
-  d.notas_aliados = document.getElementById('notas-aliados')?.value;
-  d.notas_missoes = document.getElementById('notas-missoes')?.value;
-  d._name = document.getElementById('f-nome')?.value?.trim() || 'Sem nome';
+  d.conds   = Array.from(document.querySelectorAll('.bcard-select')).map(e=>e.value);
+  d.bodyarmor = Array.from(document.querySelectorAll('.body-armor')).map(e=>({val:e.value,base:e.getAttribute('data-base')||'0'}));
+  d.absorcao  = document.getElementById('absorcao-geral')?.value||'0';
+  d.qd        = Array.from(document.querySelectorAll('.qd-textarea')).map(e=>e.value);
+  d.weapons   = Array.from(document.querySelectorAll('#weapons-body tr')).map(tr=>Array.from(tr.querySelectorAll('input,select')).map(e=>e.value));
+  d.inv       = Array.from(document.querySelectorAll('#inv-body tr')).map(tr=>Array.from(tr.querySelectorAll('input,textarea')).map(e=>e.value));
+  d.hab       = Array.from(document.querySelectorAll('#hab-body tr')).map(tr=>Array.from(tr.querySelectorAll('input,textarea')).map(e=>e.value));
+  d.dinheiro  = document.getElementById('dinheiro')?.value||'0';
+  d.esp       = Array.from(document.querySelectorAll('.stat-box-val')).map(e=>e.value);
+  d.notas_gerais  = document.getElementById('notas-gerais')?.value||'';
+  d.notas_aliados = document.getElementById('notas-aliados')?.value||'';
+  d.notas_missoes = document.getElementById('notas-missoes')?.value||'';
+  d._name = (document.getElementById('f-nome')?.value||'').trim() || 'Sem nome';
   return d;
 }
 
 function applyData(d) {
   if(!d) return;
-  if(d.xp!==undefined) document.getElementById('xp-total').value=d.xp;
-  if(d.photo) { photoData=d.photo; document.getElementById('photo-preview').src=d.photo; document.getElementById('photo-preview').style.display='block'; document.getElementById('photo-placeholder').style.display='none'; }
+  const xp=document.getElementById('xp-total'); if(xp&&d.xp!==undefined) xp.value=d.xp;
+  if(d.photo){ photoData=d.photo; const pp=document.getElementById('photo-preview'); if(pp){pp.src=d.photo;pp.style.display='block';} const ph=document.getElementById('photo-placeholder');if(ph)ph.style.display='none'; }
   ['nome','idade','ocup','jogador','patente','aparencia'].forEach(k=>{ const el=document.getElementById('f-'+k); if(el&&d['f_'+k]!==undefined) el.value=d['f_'+k]; });
-  if(d.f_origem) { const el=document.getElementById('f-origem'); if(el) el.value=d.f_origem; }
+  if(d.f_origem){ const el=document.getElementById('f-origem'); if(el) el.value=d.f_origem; }
   ['agil','cons','conh','for','int'].forEach(k=>{ const el=document.getElementById('attr-'+k); if(el&&d['attr_'+k]!==undefined) el.value=d['attr_'+k]; });
   ['vit','ener','sang','medo'].forEach(k=>{ const el=document.getElementById(k+'-perd'); if(el&&d['perd_'+k]!==undefined) el.value=d['perd_'+k]; });
-  if(d.comps){const els=document.querySelectorAll('[data-idx]');d.comps.forEach((v,i)=>{if(els[i])els[i].value=v;});}
-  if(d.compmod){const els=document.querySelectorAll('[data-modif]');d.compmod.forEach((v,i)=>{if(els[i])els[i].value=v;});}
-  if(d.conds){const els=document.querySelectorAll('.bcard-select');d.conds.forEach((v,i)=>{if(els[i]){els[i].value=v;const part=els[i].getAttribute('onchange').match(/'([^']+)'/)?.[1];if(part)updateInjury(part,v);}});}
-  if(d.bodyarmor){const els=document.querySelectorAll('.body-armor');d.bodyarmor.forEach((obj,i)=>{if(els[i]){els[i].value=obj.val;els[i].setAttribute('data-base',obj.base);}});}
-  if(d.absorcao!==undefined) document.getElementById('absorcao-geral').value=d.absorcao;
-  if(d.qd){const els=document.querySelectorAll('.qd-textarea');d.qd.forEach((v,i)=>{if(els[i]){els[i].value=v;autoResize(els[i]);}});}
-  if(d.weapons){const trs=document.querySelectorAll('#weapons-body tr');d.weapons.forEach((row,i)=>{if(trs[i]){const inps=trs[i].querySelectorAll('input,select');row.forEach((v,j)=>{if(inps[j])inps[j].value=v;});}});}
-  if(d.inv){const trs=document.querySelectorAll('#inv-body tr');d.inv.forEach((row,i)=>{if(trs[i]){const inps=trs[i].querySelectorAll('input,textarea');row.forEach((v,j)=>{if(inps[j]){inps[j].value=v;if(inps[j].tagName==='TEXTAREA')autoResize(inps[j]);}});}});}
-  if(d.hab){const trs=document.querySelectorAll('#hab-body tr');d.hab.forEach((row,i)=>{if(trs[i]){const inps=trs[i].querySelectorAll('input,textarea');row.forEach((v,j)=>{if(inps[j]){inps[j].value=v;if(inps[j].tagName==='TEXTAREA')autoResize(inps[j]);}});}});}
-  if(d.dinheiro!==undefined) document.getElementById('dinheiro').value=d.dinheiro;
-  if(d.esp){const els=document.querySelectorAll('.stat-box-val');d.esp.forEach((v,i)=>{if(els[i])els[i].value=v;});}
-  if(d.notas_gerais!==undefined){const el=document.getElementById('notas-gerais');if(el){el.value=d.notas_gerais;autoResize(el);}}
-  if(d.notas_aliados!==undefined){const el=document.getElementById('notas-aliados');if(el){el.value=d.notas_aliados;autoResize(el);}}
-  if(d.notas_missoes!==undefined){const el=document.getElementById('notas-missoes');if(el){el.value=d.notas_missoes;autoResize(el);}}
+  if(d.comps){ const els=document.querySelectorAll('[data-idx]'); d.comps.forEach((v,i)=>{ if(els[i]) els[i].value=v; }); }
+  if(d.compmod){ const els=document.querySelectorAll('[data-modif]'); d.compmod.forEach((v,i)=>{ if(els[i]) els[i].value=v; }); }
+  if(d.conds){ const els=document.querySelectorAll('.bcard-select'); d.conds.forEach((v,i)=>{ if(els[i]){ els[i].value=v; const p=els[i].getAttribute('onchange').match(/'([^']+)'/)?.[1]; if(p) updateInjury(p,v); } }); }
+  if(d.bodyarmor){ const els=document.querySelectorAll('.body-armor'); d.bodyarmor.forEach((obj,i)=>{ if(els[i]){ els[i].value=obj.val; els[i].setAttribute('data-base',obj.base); } }); }
+  const ag=document.getElementById('absorcao-geral'); if(ag&&d.absorcao!==undefined) ag.value=d.absorcao;
+  if(d.qd){ const els=document.querySelectorAll('.qd-textarea'); d.qd.forEach((v,i)=>{ if(els[i]){ els[i].value=v; autoResize(els[i]); } }); }
+  if(d.weapons){ const trs=document.querySelectorAll('#weapons-body tr'); d.weapons.forEach((row,i)=>{ if(trs[i]){ const inps=trs[i].querySelectorAll('input,select'); row.forEach((v,j)=>{ if(inps[j]) inps[j].value=v; }); } }); }
+  if(d.inv){ const trs=document.querySelectorAll('#inv-body tr'); d.inv.forEach((row,i)=>{ if(trs[i]){ const inps=trs[i].querySelectorAll('input,textarea'); row.forEach((v,j)=>{ if(inps[j]){ inps[j].value=v; if(inps[j].tagName==='TEXTAREA') autoResize(inps[j]); } }); } }); }
+  if(d.hab){ const trs=document.querySelectorAll('#hab-body tr'); d.hab.forEach((row,i)=>{ if(trs[i]){ const inps=trs[i].querySelectorAll('input,textarea'); row.forEach((v,j)=>{ if(inps[j]){ inps[j].value=v; if(inps[j].tagName==='TEXTAREA') autoResize(inps[j]); } }); } }); }
+  const din=document.getElementById('dinheiro'); if(din&&d.dinheiro!==undefined) din.value=d.dinheiro;
+  if(d.esp){ const els=document.querySelectorAll('.stat-box-val'); d.esp.forEach((v,i)=>{ if(els[i]) els[i].value=v; }); }
+  if(d.notas_gerais!==undefined){ const e=document.getElementById('notas-gerais'); if(e){ e.value=d.notas_gerais; autoResize(e); } }
+  if(d.notas_aliados!==undefined){ const e=document.getElementById('notas-aliados'); if(e){ e.value=d.notas_aliados; autoResize(e); } }
+  if(d.notas_missoes!==undefined){ const e=document.getElementById('notas-missoes'); if(e){ e.value=d.notas_missoes; autoResize(e); } }
   recalc();
 }
 
-function getChars(){try{return JSON.parse(localStorage.getItem(STORE_KEY))||{};}catch(e){return{};}}
-function saveChars(c){localStorage.setItem(STORE_KEY,JSON.stringify(c));}
+function getChars(){
+  try{ return JSON.parse(localStorage.getItem(STORE_KEY))||{}; }
+  catch(e){ return {}; }
+}
+function saveChars(c){ localStorage.setItem(STORE_KEY,JSON.stringify(c)); }
 
-function saveNow() {
-  const chars=getChars(); const data=collectData();
+/* ── SAVE ── */
+function saveNow(){
+  if(_saving_locked) return;
+  const chars=getChars();
+  const data=collectData();
   data._saved=new Date().toLocaleTimeString('pt-BR');
-  chars[activeId]=data; saveChars(chars);
+  chars[activeId]=data;
+  saveChars(chars);
   localStorage.setItem(ACTIVE_KEY,activeId);
   updateStatus('Salvo às '+data._saved,'ok');
-  updateCharSelect();
+  updateCharNameDisplay();
 }
-
 function scheduleSave(){
-  clearTimeout(saveTimer); updateStatus('Editando...','');
+  if(_saving_locked) return;
+  clearTimeout(saveTimer);
+  updateStatus('Editando...','');
   saveTimer=setTimeout(saveNow,2000);
 }
 function updateStatus(msg,cls){
   const el=document.getElementById('save-status');
   el.textContent=msg; el.className='save-status'+(cls?' '+cls:'');
 }
-function updateCharSelect(){
-  const chars=getChars(); const sel=document.getElementById('char-select');
-  sel.innerHTML='';
-  Object.entries(chars).forEach(([id,d])=>{
-    const opt=document.createElement('option');
-    opt.value=id; opt.textContent=d._name||'Sem nome';
-    if(id===activeId)opt.selected=true; sel.appendChild(opt);
+function updateCharNameDisplay(){
+  const chars=getChars();
+  const d=chars[activeId];
+  const name=d?(d._name||d.f_nome||'Sem nome'):'';
+  const el=document.getElementById('char-name-display');
+  if(el) el.textContent=name;
+}
+
+/* ── CHAR MODAL ── */
+function openCharModal(){
+  renderCharList();
+  document.getElementById('char-modal').classList.add('show');
+}
+function closeCharModal(){
+  document.getElementById('char-modal').classList.remove('show');
+}
+function renderCharList(){
+  const chars=getChars();
+  const list=document.getElementById('char-list');
+  list.innerHTML='';
+  const keys=Object.keys(chars);
+  if(keys.length===0){
+    list.innerHTML='<div style="color:var(--text3);font-family:Cinzel,serif;font-size:10px;text-align:center;padding:20px;">Nenhuma ficha encontrada.</div>';
+    return;
+  }
+  keys.forEach(id=>{
+    const d=chars[id];
+    const name=d._name||d.f_nome||'Sem nome';
+    const saved=d._saved||'—';
+    const isActive=id===activeId;
+
+    const item=document.createElement('div');
+    item.className='char-list-item'+(isActive?' active-char':'');
+
+        const activeBadge = isActive ? '<span class="char-item-active-badge">Ativa</span>' : '';
+    const safeName = name.replace(/'/g, "\'");
+    item.innerHTML =
+      '<div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;cursor:pointer;" onclick="selectChar(\'' + id + '\')">'+
+        '<div class="char-item-name">' + name + '</div>'+
+        '<div class="char-item-saved">Salvo: ' + saved + '</div>'+
+      '</div>'+
+      activeBadge +
+      '<button class="char-delete-btn" title="Apagar ficha" onclick="event.stopPropagation();confirmDelete(\'' + id + '\',\'' + safeName + '\')">🗑</button>';
+    list.appendChild(item);
   });
 }
-function switchChar(id){saveNow();activeId=id;localStorage.setItem(ACTIVE_KEY,id);applyData(getChars()[id]);updateStatus('Carregado','ok');}
-function newChar(){
-  saveNow(); const id='char_'+Date.now(); activeId=id;
+
+function selectChar(id){
+  if(id===activeId){ closeCharModal(); return; }
+  _saving_locked=true;
+  clearTimeout(saveTimer);
+  const chars=getChars();
+  chars[activeId]=collectData();
+  saveChars(chars);
+  activeId=id;
+  localStorage.setItem(ACTIVE_KEY,id);
+  applyData(getChars()[id]);
+  _saving_locked=false;
+  updateCharNameDisplay();
+  updateStatus('Carregado','ok');
+  closeCharModal();
+}
+
+function confirmDelete(id, name){
+  // Open custom modal instead of browser confirm()
+  document.getElementById('del-modal-name').textContent = 'Tem certeza que deseja apagar "' + name + '"? Esta ação não pode ser desfeita.';
+  document.getElementById('del-confirm-btn').onclick = function(){ doDelete(id); };
+  document.getElementById('del-modal').classList.add('show');
+}
+function closeDelModal(){
+  document.getElementById('del-modal').classList.remove('show');
+}
+function doDelete(id){
+  closeDelModal();
+  // Lock before any DOM event can fire
+  _saving_locked = true;
+  clearTimeout(saveTimer);
+  let chars = getChars();
+  delete chars[id];
+  const remaining = Object.keys(chars);
+  if(remaining.length === 0){
+    const newId = 'char_' + Date.now();
+    activeId = newId;
+    localStorage.setItem(ACTIVE_KEY, newId);
+    clearForm();
+    const fresh = {};
+    fresh[newId] = collectData();
+    fresh[newId]._name = 'Meu Personagem';
+    saveChars(fresh);
+    _saving_locked = false;
+    updateCharNameDisplay();
+    updateStatus('Nova ficha criada','ok');
+    showToast('Ficha apagada. Nova ficha criada!');
+  } else {
+    saveChars(chars);
+    if(id === activeId){
+      activeId = remaining[0];
+      localStorage.setItem(ACTIVE_KEY, activeId);
+      applyData(chars[activeId]);
+    }
+    _saving_locked = false;
+    updateCharNameDisplay();
+    renderCharList();
+    updateStatus('Ficha apagada','ok');
+    showToast('Ficha apagada!');
+  }
+}
+
+function newCharFromModal(){
+  _saving_locked=true;
+  clearTimeout(saveTimer);
+  const chars=getChars();
+  chars[activeId]=collectData();
+  saveChars(chars);
+  const id='char_'+Date.now();
+  activeId=id;
+  localStorage.setItem(ACTIVE_KEY,id);
+  clearForm();
+  const chars2=getChars();
+  chars2[id]=collectData();
+  chars2[id]._name='Novo Personagem';
+  saveChars(chars2);
+  _saving_locked=false;
+  updateCharNameDisplay();
+  updateStatus('Nova ficha criada','ok');
+  showToast('Nova ficha criada!');
+  closeCharModal();
+}
+
+/* ── CLEAR FORM ── */
+function clearForm(){
   document.querySelectorAll('.field-input').forEach(e=>e.value='');
   document.querySelectorAll('.field-select').forEach(e=>e.selectedIndex=0);
   ['agil','cons','conh','for','int'].forEach(k=>{const e=document.getElementById('attr-'+k);if(e)e.value=1;});
   ['vit','ener','sang','medo'].forEach(k=>{const e=document.getElementById(k+'-perd');if(e)e.value=0;});
-  document.querySelectorAll('.bcard-select').forEach(e=>{e.value='Nenhum';const p=e.getAttribute('onchange').match(/'([^']+)'/)?.[1];if(p)updateInjury(p,'Nenhum');});
+  document.querySelectorAll('.bcard-select').forEach(e=>{
+    e.value='Nenhum';
+    const p=e.getAttribute('onchange').match(/'([^']+)'/)?.[1];
+    if(p) updateInjury(p,'Nenhum');
+  });
   document.querySelectorAll('.body-armor').forEach(e=>{e.value=0;e.setAttribute('data-base',0);});
-  document.getElementById('absorcao-geral').value=0;
+  const ag=document.getElementById('absorcao-geral');if(ag)ag.value=0;
   document.querySelectorAll('.qd-textarea').forEach(e=>{e.value='';autoResize(e);});
   document.querySelectorAll('[data-idx],[data-modif]').forEach(e=>e.value=0);
-  document.querySelectorAll('#weapons-body input').forEach(e=>e.value='');
+  document.querySelectorAll('#weapons-body input,#weapons-body select').forEach(e=>{
+    if(e.tagName==='SELECT') e.selectedIndex=0; else e.value='';
+  });
   document.querySelectorAll('#inv-body input,#inv-body textarea').forEach(e=>e.value='');
   document.querySelectorAll('#hab-body input,#hab-body textarea').forEach(e=>e.value='');
-  if(document.getElementById('dinheiro'))document.getElementById('dinheiro').value=0;
-  ['notas-gerais','notas-aliados','notas-missoes'].forEach(k=>{const e=document.getElementById(k);if(e){e.value='';autoResize(e);}});
-  photoData=''; document.getElementById('photo-preview').src=''; document.getElementById('photo-preview').style.display='none'; document.getElementById('photo-placeholder').style.display='flex';
-  recalc(); saveNow(); updateCharSelect(); showToast('Nova ficha criada!');
+  const din=document.getElementById('dinheiro');if(din)din.value=0;
+  ['notas-gerais','notas-aliados','notas-missoes'].forEach(k=>{
+    const e=document.getElementById(k);if(e){e.value='';autoResize(e);}
+  });
+  photoData='';
+  const pp=document.getElementById('photo-preview');if(pp){pp.src='';pp.style.display='none';}
+  const ph=document.getElementById('photo-placeholder');if(ph)ph.style.display='flex';
+  const xp=document.getElementById('xp-total');if(xp)xp.value=0;
+  recalc();
 }
-function deleteChar(){
-  const chars=getChars(); const keys=Object.keys(chars);
-  if(keys.length<=1){showToast('Nao e possivel apagar a unica ficha.');return;}
-  if(!confirm('Apagar esta ficha permanentemente?'))return;
-  delete chars[activeId]; saveChars(chars);
-  activeId=Object.keys(chars)[0]; localStorage.setItem(ACTIVE_KEY,activeId);
-  applyData(chars[activeId]); updateCharSelect(); showToast('Ficha apagada.');
-}
+
+/* ── SHARE ── */
 function openShareModal(){
   saveNow();
   const data=collectData(); const json=JSON.stringify(data);
@@ -1559,7 +1758,7 @@ function openShareModal(){
   document.getElementById('share-url').textContent=window.location.origin+window.location.pathname+'?ficha='+b64;
   document.getElementById('share-modal').classList.add('show');
 }
-function closeShareModal(){document.getElementById('share-modal').classList.remove('show');}
+function closeShareModal(){ document.getElementById('share-modal').classList.remove('show'); }
 function copyShareUrl(){
   const url=document.getElementById('share-url').textContent;
   navigator.clipboard.writeText(url).then(()=>showToast('Link copiado!')).catch(()=>{
@@ -1572,33 +1771,45 @@ function showToast(msg){
   const t=document.getElementById('toast'); t.textContent=msg;
   t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500);
 }
+
+/* ── LOAD FROM URL ── */
 function loadFromUrl(){
   const param=new URLSearchParams(window.location.search).get('ficha');
-  if(!param)return false;
+  if(!param) return false;
   try{
     const data=JSON.parse(decodeURIComponent(atob(param)));
-    const id='char_'+Date.now(); data._name=(data._name||'Compartilhada')+' (recebida)';
+    const id='char_'+Date.now();
+    data._name=(data._name||'Compartilhada')+' (recebida)';
     const chars=getChars(); chars[id]=data; saveChars(chars);
     activeId=id; localStorage.setItem(ACTIVE_KEY,id);
-    applyData(data); updateCharSelect(); updateStatus('Ficha recebida!','ok');
+    applyData(data);
+    updateCharNameDisplay();
+    updateStatus('Ficha recebida!','ok');
     showToast('Ficha carregada do link!');
     window.history.replaceState({},'',window.location.pathname);
     return true;
-  }catch(e){return false;}
+  }catch(e){ return false; }
 }
 
 /* ── INIT ── */
 (function init(){
   const fromUrl=loadFromUrl();
   if(!fromUrl){
-    let chars=getChars(); let saved=localStorage.getItem(ACTIVE_KEY);
-    if(Object.keys(chars).length===0){activeId='char_'+Date.now();chars[activeId]={_name:'Meu Personagem'};saveChars(chars);}
-    else{activeId=(saved&&chars[saved])?saved:Object.keys(chars)[0];}
+    let chars=getChars();
+    let saved=localStorage.getItem(ACTIVE_KEY);
+    if(Object.keys(chars).length===0){
+      activeId='char_'+Date.now();
+      chars[activeId]={_name:'Meu Personagem'};
+      saveChars(chars);
+    } else {
+      activeId=(saved&&chars[saved])?saved:Object.keys(chars)[0];
+    }
     applyData(chars[activeId]);
   }
-  updateCharSelect(); updateStatus('Pronto','ok');
-  document.addEventListener('input',scheduleSave);
-  document.addEventListener('change',scheduleSave);
+  updateCharNameDisplay();
+  updateStatus('Pronto','ok');
+  document.addEventListener('input', scheduleSave);
+  document.addEventListener('change', scheduleSave);
   recalc();
   setTimeout(autoResizeAll,100);
 })();
