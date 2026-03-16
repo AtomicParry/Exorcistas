@@ -215,7 +215,7 @@ body {
 
 /* ── ATTRIBUTES ── */
 .attrs-grid {
-  display:grid; grid-template-columns:repeat(5,1fr); gap:8px; padding:16px;
+  display:grid; grid-template-columns:repeat(6,1fr); gap:8px; padding:16px;
 }
 .attr-box {
   background:var(--bg2); border:1px solid var(--border2); border-radius:var(--radius);
@@ -914,6 +914,10 @@ body {
         <div class="attr-name">Intelecto</div>
         <input class="attr-val" id="attr-int" type="number" value="1" min="1" max="20" oninput="recalc()">
       </div>
+      <div class="attr-box">
+        <div class="attr-name">Poder</div>
+        <input class="attr-val" id="attr-pod" type="number" value="1" min="1" max="20" oninput="recalc()">
+      </div>
     </div>
   </div>
 
@@ -987,7 +991,7 @@ body {
     <div>
       <div class="sec-head"><div class="sec-line"></div><span class="sec-title">Atributos</span><div class="sec-line r"></div></div>
       <div class="panel radar-container">
-        <svg id="radar-svg" viewBox="0 0 260 260" width="260" height="260">
+        <svg id="radar-svg" viewBox="0 0 400 400" width="340" height="340">
           <defs>
             <radialGradient id="radar-bg-g" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stop-color="#1a0505" stop-opacity="0.6"/>
@@ -997,86 +1001,56 @@ body {
               <feGaussianBlur stdDeviation="2.5" result="blur"/>
               <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
-            <filter id="label-glow">
-              <feGaussianBlur stdDeviation="1.5" result="blur"/>
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
           </defs>
-
-          <!-- Background fill -->
-          <polygon points="130.0,46.0 209.9,104.0 179.4,198.0 80.6,198.0 50.1,104.0" fill="url(#radar-bg-g)" stroke="none"/>
-
-          <!-- Grid rings — 4 levels -->
-          <!-- Outermost ring -->
-          <polygon points="130.0,46.0 209.9,104.0 179.4,198.0 80.6,198.0 50.1,104.0" fill="none" stroke="#4a1a1a" stroke-width="1.2" stroke-dasharray="4,3"/>
-          <!-- 75% ring -->
-          <polygon points="130.0,67.0 189.9,110.5 167.0,181.0 93.0,181.0 70.1,110.5" fill="none" stroke="#3b1212" stroke-width="1" stroke-dasharray="3,3"/>
-          <!-- 50% ring -->
-          <polygon points="130.0,88.0 169.9,117.0 154.7,164.0 105.3,164.0 90.1,117.0" fill="none" stroke="#2e0e0e" stroke-width="1" stroke-dasharray="3,4"/>
-          <!-- 25% ring -->
-          <polygon points="130.0,109.0 150.0,123.5 142.3,147.0 117.7,147.0 110.0,123.5" fill="none" stroke="#240c0c" stroke-width="0.8" stroke-dasharray="2,4"/>
-
-          <!-- Axis lines -->
-          <line stroke="#3b1212" stroke-width="1" stroke-dasharray="2,3" x1="130" y1="130" x2="130.0" y2="46.0"/>
-          <line stroke="#3b1212" stroke-width="1" stroke-dasharray="2,3" x1="130" y1="130" x2="209.9" y2="104.0"/>
-          <line stroke="#3b1212" stroke-width="1" stroke-dasharray="2,3" x1="130" y1="130" x2="179.4" y2="198.0"/>
-          <line stroke="#3b1212" stroke-width="1" stroke-dasharray="2,3" x1="130" y1="130" x2="80.6" y2="198.0"/>
-          <line stroke="#3b1212" stroke-width="1" stroke-dasharray="2,3" x1="130" y1="130" x2="50.1" y2="104.0"/>
-
-          <!-- Ring value labels (1, 5, 10, 15 at 25/50/75/100%) -->
-          <text x="133" y="113" fill="#6e2020" font-family="'Share Tech Mono',monospace" font-size="7" opacity="0.7">5</text>
-          <text x="133" y="92" fill="#6e2020" font-family="'Share Tech Mono',monospace" font-size="7" opacity="0.7">10</text>
-          <text x="133" y="71" fill="#6e2020" font-family="'Share Tech Mono',monospace" font-size="7" opacity="0.7">15</text>
-          <text x="133" y="50" fill="#8b2a2a" font-family="'Share Tech Mono',monospace" font-size="7" opacity="0.8">20</text>
-
-          <!-- Data polygon — filled with glow -->
-          <polygon id="radar-poly"
-            fill="rgba(139,0,0,0.18)"
-            stroke="#c0392b"
-            stroke-width="2"
-            stroke-linejoin="round"
-            filter="url(#radar-glow)"
-            points="130.0,109.0 150.0,123.5 142.3,147.0 117.7,147.0 110.0,123.5"/>
-
-          <!-- Data polygon inner highlight -->
-          <polygon id="radar-poly-inner"
-            fill="rgba(192,57,43,0.06)"
-            stroke="rgba(232,96,76,0.4)"
-            stroke-width="0.8"
-            stroke-linejoin="round"
-            points="130.0,109.0 150.0,123.5 142.3,147.0 117.7,147.0 110.0,123.5"/>
-
-          <!-- Vertex dots -->
-          <circle id="rdot-0" cx="130.0" cy="46.0" r="0" fill="#e8604c" filter="url(#radar-glow)"/>
-          <circle id="rdot-1" cx="209.9" cy="104.0" r="0" fill="#e8604c" filter="url(#radar-glow)"/>
-          <circle id="rdot-2" cx="179.4" cy="198.0" r="0" fill="#e8604c" filter="url(#radar-glow)"/>
-          <circle id="rdot-3" cx="80.6" cy="198.0" r="0" fill="#e8604c" filter="url(#radar-glow)"/>
-          <circle id="rdot-4" cx="50.1" cy="104.0" r="0" fill="#e8604c" filter="url(#radar-glow)"/>
-
-          <!-- Center dot -->
-          <circle cx="130" cy="130" r="3" fill="#8b0000" opacity="0.8"/>
-          <circle cx="130" cy="130" r="1.5" fill="#e8604c"/>
-
-          <!-- Attribute labels with background boxes -->
-          <!-- AGILIDADE — top -->
-          <rect x="97" y="22" width="66" height="16" rx="2" fill="#0a0404" stroke="#4a1a1a" stroke-width="0.8" opacity="0.9"/>
-          <text x="130" y="33" text-anchor="middle" fill="#c0392b" font-family="'Cinzel',serif" font-size="8.5" font-weight="700" letter-spacing="1.5" filter="url(#label-glow)">AGILIDADE</text>
-
-          <!-- CONSTITUIÇÃO — upper right -->
-          <rect x="175" y="62" width="68" height="16" rx="2" fill="#0a0404" stroke="#4a1a1a" stroke-width="0.8" opacity="0.9"/>
-          <text x="209" y="73" text-anchor="middle" fill="#c0392b" font-family="'Cinzel',serif" font-size="8.5" font-weight="700" letter-spacing="1" filter="url(#label-glow)">CONSTITUIÇÃO</text>
-
-          <!-- CONHECIMENTO — lower right -->
-          <rect x="171" y="175" width="72" height="16" rx="2" fill="#0a0404" stroke="#4a1a1a" stroke-width="0.8" opacity="0.9"/>
-          <text x="207" y="186" text-anchor="middle" fill="#c0392b" font-family="'Cinzel',serif" font-size="8.5" font-weight="700" letter-spacing="1" filter="url(#label-glow)">CONHECIMENTO</text>
-
-          <!-- FORÇA — bottom -->
-          <rect x="101" y="218" width="58" height="16" rx="2" fill="#0a0404" stroke="#4a1a1a" stroke-width="0.8" opacity="0.9"/>
-          <text x="130" y="229" text-anchor="middle" fill="#c0392b" font-family="'Cinzel',serif" font-size="8.5" font-weight="700" letter-spacing="1.5" filter="url(#label-glow)">FORÇA</text>
-
-          <!-- INTELECTO — left -->
-          <rect x="14" y="175" width="62" height="16" rx="2" fill="#0a0404" stroke="#4a1a1a" stroke-width="0.8" opacity="0.9"/>
-          <text x="45" y="186" text-anchor="middle" fill="#c0392b" font-family="'Cinzel',serif" font-size="8.5" font-weight="700" letter-spacing="1.5" filter="url(#label-glow)">INTELECTO</text>
+          <polygon points="200.0,110.0 277.9,155.0 277.9,245.0 200.0,290.0 122.1,245.0 122.1,155.0" fill="url(#radar-bg-g)" stroke="none"/>
+          <polygon points="200.0,110.0 277.9,155.0 277.9,245.0 200.0,290.0 122.1,245.0 122.1,155.0" fill="none" stroke="#4a1a1a" stroke-width="1.2" stroke-dasharray="4,3"/>
+          <polygon points="200.0,132.5 258.5,166.2 258.5,233.8 200.0,267.5 141.5,233.8 141.5,166.2" fill="none" stroke="#3b1212" stroke-width="1.0" stroke-dasharray="3,3"/>
+          <polygon points="200.0,155.0 239.0,177.5 239.0,222.5 200.0,245.0 161.0,222.5 161.0,177.5" fill="none" stroke="#2e0e0e" stroke-width="1.0" stroke-dasharray="3,4"/>
+          <polygon points="200.0,177.5 219.5,188.8 219.5,211.2 200.0,222.5 180.5,211.2 180.5,188.8" fill="none" stroke="#240c0c" stroke-width="0.8" stroke-dasharray="2,4"/>
+          <line stroke="#3b1212" stroke-width="1" stroke-dasharray="2,3" x1="200" y1="200" x2="200.0" y2="110.0"/>
+          <line stroke="#3b1212" stroke-width="1" stroke-dasharray="2,3" x1="200" y1="200" x2="277.9" y2="155.0"/>
+          <line stroke="#3b1212" stroke-width="1" stroke-dasharray="2,3" x1="200" y1="200" x2="277.9" y2="245.0"/>
+          <line stroke="#3b1212" stroke-width="1" stroke-dasharray="2,3" x1="200" y1="200" x2="200.0" y2="290.0"/>
+          <line stroke="#3b1212" stroke-width="1" stroke-dasharray="2,3" x1="200" y1="200" x2="122.1" y2="245.0"/>
+          <line stroke="#3b1212" stroke-width="1" stroke-dasharray="2,3" x1="200" y1="200" x2="122.1" y2="155.0"/>
+          <text x="204" y="181.5" fill="#6e2020" font-family="'Share Tech Mono',monospace" font-size="8" opacity="0.8">5</text>
+          <text x="204" y="159.0" fill="#6e2020" font-family="'Share Tech Mono',monospace" font-size="8" opacity="0.8">10</text>
+          <text x="204" y="136.5" fill="#6e2020" font-family="'Share Tech Mono',monospace" font-size="8" opacity="0.8">15</text>
+          <text x="204" y="114.0" fill="#8b2a2a" font-family="'Share Tech Mono',monospace" font-size="8" opacity="0.8">20</text>
+          <polygon id="radar-poly" fill="rgba(139,0,0,0.18)" stroke="#c0392b" stroke-width="2" stroke-linejoin="round" filter="url(#radar-glow)" points="200.0,195.5 203.9,197.8 203.9,202.2 200.0,204.5 196.1,202.2 196.1,197.8"/>
+          <polygon id="radar-poly-inner" fill="rgba(192,57,43,0.06)" stroke="rgba(232,96,76,0.4)" stroke-width="0.8" stroke-linejoin="round" points="200.0,195.5 203.9,197.8 203.9,202.2 200.0,204.5 196.1,202.2 196.1,197.8"/>
+          <circle id="rdot-0" cx="200.0" cy="110.0" r="0" fill="#e8604c" filter="url(#radar-glow)"/>
+          <circle id="rdot-1" cx="277.9" cy="155.0" r="0" fill="#e8604c" filter="url(#radar-glow)"/>
+          <circle id="rdot-2" cx="277.9" cy="245.0" r="0" fill="#e8604c" filter="url(#radar-glow)"/>
+          <circle id="rdot-3" cx="200.0" cy="290.0" r="0" fill="#e8604c" filter="url(#radar-glow)"/>
+          <circle id="rdot-4" cx="122.1" cy="245.0" r="0" fill="#e8604c" filter="url(#radar-glow)"/>
+          <circle id="rdot-5" cx="122.1" cy="155.0" r="0" fill="#e8604c" filter="url(#radar-glow)"/>
+          <circle cx="200" cy="200" r="3" fill="#8b0000" opacity="0.8"/>
+          <circle cx="200" cy="200" r="1.5" fill="#e8604c"/>
+          <circle cx="200.0" cy="110.0" r="3" fill="#8b0000" stroke="#c0392b" stroke-width="1" opacity="0.9"/>
+          <line x1="200.0" y1="104.0" x2="200.0" y2="76.0" stroke="#5c1a1a" stroke-width="0.8" opacity="0.6"/>
+          <rect x="161.2" y="51.0" width="77.5" height="16" rx="3" fill="#0d0404" stroke="#6b2020" stroke-width="1" opacity="0.97"/>
+          <text x="200.0" y="64.0" text-anchor="middle" fill="#e8604c" font-family="'Cinzel',serif" font-size="9" font-weight="700" letter-spacing="1">AGILIDADE</text>
+          <circle cx="277.9" cy="155.0" r="3" fill="#8b0000" stroke="#c0392b" stroke-width="1" opacity="0.9"/>
+          <line x1="283.1" y1="152.0" x2="307.4" y2="138.0" stroke="#5c1a1a" stroke-width="0.8" opacity="0.6"/>
+          <rect x="320.3" y="126.0" width="100.0" height="16" rx="3" fill="#0d0404" stroke="#6b2020" stroke-width="1" opacity="0.97"/>
+          <text x="320.3" y="139.0" text-anchor="start" fill="#e8604c" font-family="'Cinzel',serif" font-size="9" font-weight="700" letter-spacing="1">CONSTITUIÇÃO</text>
+          <circle cx="277.9" cy="245.0" r="3" fill="#8b0000" stroke="#c0392b" stroke-width="1" opacity="0.9"/>
+          <line x1="283.1" y1="248.0" x2="307.4" y2="262.0" stroke="#5c1a1a" stroke-width="0.8" opacity="0.6"/>
+          <rect x="320.3" y="258.0" width="100.0" height="16" rx="3" fill="#0d0404" stroke="#6b2020" stroke-width="1" opacity="0.97"/>
+          <text x="320.3" y="271.0" text-anchor="start" fill="#e8604c" font-family="'Cinzel',serif" font-size="9" font-weight="700" letter-spacing="1">CONHECIMENTO</text>
+          <circle cx="200.0" cy="290.0" r="3" fill="#8b0000" stroke="#c0392b" stroke-width="1" opacity="0.9"/>
+          <line x1="200.0" y1="296.0" x2="200.0" y2="324.0" stroke="#5c1a1a" stroke-width="0.8" opacity="0.6"/>
+          <rect x="176.2" y="333.0" width="47.5" height="16" rx="3" fill="#0d0404" stroke="#6b2020" stroke-width="1" opacity="0.97"/>
+          <text x="200.0" y="346.0" text-anchor="middle" fill="#e8604c" font-family="'Cinzel',serif" font-size="9" font-weight="700" letter-spacing="1">FORÇA</text>
+          <circle cx="122.1" cy="245.0" r="3" fill="#8b0000" stroke="#c0392b" stroke-width="1" opacity="0.9"/>
+          <line x1="116.9" y1="248.0" x2="92.6" y2="262.0" stroke="#5c1a1a" stroke-width="0.8" opacity="0.6"/>
+          <rect x="2.2" y="258.0" width="77.5" height="16" rx="3" fill="#0d0404" stroke="#6b2020" stroke-width="1" opacity="0.97"/>
+          <text x="79.7" y="271.0" text-anchor="end" fill="#e8604c" font-family="'Cinzel',serif" font-size="9" font-weight="700" letter-spacing="1">INTELECTO</text>
+          <circle cx="122.1" cy="155.0" r="3" fill="#8b0000" stroke="#c0392b" stroke-width="1" opacity="0.9"/>
+          <line x1="116.9" y1="152.0" x2="92.6" y2="138.0" stroke="#5c1a1a" stroke-width="0.8" opacity="0.6"/>
+          <rect x="32.2" y="126.0" width="47.5" height="16" rx="3" fill="#0d0404" stroke="#6b2020" stroke-width="1" opacity="0.97"/>
+          <text x="79.7" y="139.0" text-anchor="end" fill="#e8604c" font-family="'Cinzel',serif" font-size="9" font-weight="700" letter-spacing="1">PODER</text>
 
         </svg>
       </div>
@@ -1149,17 +1123,12 @@ body {
       <!-- 3x3 CARDS GRID (layout evoca corpo humano) -->
       <div class="body-cards-grid">
 
-        <!-- CABEÇA -->
-        <div class="body-card bcard-full" id="sec-cabeca">
+        <!-- Row 1: Cabeça centralizada -->
+        <div></div>
+        <div class="body-card" id="sec-cabeca">
           <span class="bcard-badge">Ferido</span>
           <div class="bcard-header">
-            <div class="bcard-icon"><svg viewBox="0 0 32 36" width="28" height="32">
-  <ellipse cx="16" cy="14" rx="12" ry="13" fill="none" stroke="currentColor" stroke-width="1.6"/>
-  <path d="M8,24 Q16,32 24,24 L22,30 Q16,35 10,30 Z" fill="none" stroke="currentColor" stroke-width="1.3"/>
-  <ellipse cx="11" cy="13" rx="3.5" ry="4" fill="none" stroke="currentColor" stroke-width="1.1"/>
-  <ellipse cx="21" cy="13" rx="3.5" ry="4" fill="none" stroke="currentColor" stroke-width="1.1"/>
-  <path d="M13,22 Q16,25 19,22" fill="none" stroke="currentColor" stroke-width="1"/>
-</svg></div>
+            <div class="bcard-icon"><svg viewBox="0 0 32 36" width="26" height="30"><ellipse cx="16" cy="14" rx="12" ry="13" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8,24 Q16,32 24,24 L22,30 Q16,35 10,30 Z" fill="none" stroke="currentColor" stroke-width="1.3"/><ellipse cx="11" cy="13" rx="3.5" ry="4" fill="none" stroke="currentColor" stroke-width="1.1"/><ellipse cx="21" cy="13" rx="3.5" ry="4" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M13,22 Q16,25 19,22" fill="none" stroke="currentColor" stroke-width="1"/></svg></div>
             <div class="bcard-name">Cabeça</div>
           </div>
           <div class="bcard-cond-label">Condição</div>
@@ -1171,60 +1140,13 @@ body {
             <input class="bcard-armor-input body-armor" type="number" value="0" min="0" data-base="0">
           </div>
         </div>
-        <!-- PEITO -->
-        <div class="body-card bcard-wide" id="sec-peito">
+        <div></div>
+
+        <!-- Row 2: Braço Esq | Peito | Braço Dir -->
+        <div class="body-card" id="sec-braco-esq">
           <span class="bcard-badge">Ferido</span>
           <div class="bcard-header">
-            <div class="bcard-icon"><svg viewBox="0 0 36 32" width="32" height="28">
-  <path d="M2,2 Q2,0 6,0 L30,0 Q34,0 34,2 L34,26 Q34,30 30,30 L6,30 Q2,30 2,26 Z" fill="none" stroke="currentColor" stroke-width="1.6"/>
-  <line x1="18" y1="0" x2="18" y2="30" stroke="currentColor" stroke-width="1"/>
-  <path d="M2,9 Q10,13 18,11 Q26,13 34,9" fill="none" stroke="currentColor" stroke-width="1.1"/>
-  <path d="M2,18 Q10,22 18,20 Q26,22 34,18" fill="none" stroke="currentColor" stroke-width="0.9"/>
-  <circle cx="11" cy="13" r="2" fill="none" stroke="currentColor" stroke-width="1"/>
-  <circle cx="25" cy="13" r="2" fill="none" stroke="currentColor" stroke-width="1"/>
-</svg></div>
-            <div class="bcard-name">Peito</div>
-          </div>
-          <div class="bcard-cond-label">Condição</div>
-          <select class="bcard-select" onchange="updateInjury('peito',this.value)">
-            <option>Nenhum</option><option>Sangrando</option><option>Fraturado</option><option>Debilitado</option><option>Atordoado</option><option>Amputado</option><option>Ferimento Leve</option><option>Ferimento Sério</option><option>Ferimento Grave</option>
-          </select>
-          <div class="bcard-armor-row">
-            <span class="bcard-armor-label">Armadura</span>
-            <input class="bcard-armor-input body-armor" type="number" value="0" min="0" data-base="0">
-          </div>
-        </div>
-        <!-- BR. DIREITO -->
-        <div class="body-card " id="sec-braco-dir">
-          <span class="bcard-badge">Ferido</span>
-          <div class="bcard-header">
-            <div class="bcard-icon"><svg viewBox="0 0 18 46" width="16" height="42">
-  <rect x="2" y="1" width="14" height="26" rx="7" fill="none" stroke="currentColor" stroke-width="1.6"/>
-  <path d="M4,26 L4,40 Q4,44 9,44 Q14,44 14,40 L14,26" fill="none" stroke="currentColor" stroke-width="1.4"/>
-  <path d="M4,34 Q9,36 14,34" fill="none" stroke="currentColor" stroke-width="0.9"/>
-  <path d="M5,42 L4,48 M8,43 L8,50 M11,43 L11,50 M14,42 L15,48" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-</svg></div>
-            <div class="bcard-name">Br. Direito</div>
-          </div>
-          <div class="bcard-cond-label">Condição</div>
-          <select class="bcard-select" onchange="updateInjury('braco-dir',this.value)">
-            <option>Nenhum</option><option>Sangrando</option><option>Fraturado</option><option>Debilitado</option><option>Atordoado</option><option>Amputado</option><option>Ferimento Leve</option><option>Ferimento Sério</option><option>Ferimento Grave</option>
-          </select>
-          <div class="bcard-armor-row">
-            <span class="bcard-armor-label">Armadura</span>
-            <input class="bcard-armor-input body-armor" type="number" value="0" min="0" data-base="0">
-          </div>
-        </div>
-        <!-- BR. ESQUERDO -->
-        <div class="body-card " id="sec-braco-esq">
-          <span class="bcard-badge">Ferido</span>
-          <div class="bcard-header">
-            <div class="bcard-icon"><svg viewBox="0 0 18 46" width="16" height="42">
-  <rect x="2" y="1" width="14" height="26" rx="7" fill="none" stroke="currentColor" stroke-width="1.6"/>
-  <path d="M4,26 L4,40 Q4,44 9,44 Q14,44 14,40 L14,26" fill="none" stroke="currentColor" stroke-width="1.4"/>
-  <path d="M4,34 Q9,36 14,34" fill="none" stroke="currentColor" stroke-width="0.9"/>
-  <path d="M5,42 L4,48 M8,43 L8,50 M11,43 L11,50 M14,42 L15,48" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-</svg></div>
+            <div class="bcard-icon"><svg viewBox="0 0 18 46" width="14" height="38"><rect x="2" y="1" width="14" height="22" rx="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4,22 L4,38 Q4,42 9,42 Q14,42 14,38 L14,22" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M4,30 Q9,32 14,30" fill="none" stroke="currentColor" stroke-width="0.9"/><path d="M5,40 L4,46 M8,41 L8,48 M11,41 L11,48 M14,40 L15,46" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
             <div class="bcard-name">Br. Esquerdo</div>
           </div>
           <div class="bcard-cond-label">Condição</div>
@@ -1236,17 +1158,43 @@ body {
             <input class="bcard-armor-input body-armor" type="number" value="0" min="0" data-base="0">
           </div>
         </div>
-        <!-- ABDÔMEN -->
-        <div class="body-card bcard-wide" id="sec-abdomen">
+        <div class="body-card" id="sec-peito">
           <span class="bcard-badge">Ferido</span>
           <div class="bcard-header">
-            <div class="bcard-icon"><svg viewBox="0 0 32 30" width="28" height="26">
-  <rect x="1" y="1" width="30" height="28" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
-  <line x1="16" y1="1" x2="16" y2="29" stroke="currentColor" stroke-width="1"/>
-  <line x1="1" y1="10" x2="31" y2="10" stroke="currentColor" stroke-width="0.9"/>
-  <line x1="1" y1="19" x2="31" y2="19" stroke="currentColor" stroke-width="0.9"/>
-  <circle cx="16" cy="15" r="3" fill="none" stroke="currentColor" stroke-width="1"/>
-</svg></div>
+            <div class="bcard-icon"><svg viewBox="0 0 36 32" width="30" height="26"><path d="M2,2 Q2,0 6,0 L30,0 Q34,0 34,2 L34,26 Q34,30 30,30 L6,30 Q2,30 2,26 Z" fill="none" stroke="currentColor" stroke-width="1.6"/><line x1="18" y1="0" x2="18" y2="30" stroke="currentColor" stroke-width="1"/><path d="M2,9 Q10,13 18,11 Q26,13 34,9" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="11" cy="13" r="2" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="25" cy="13" r="2" fill="none" stroke="currentColor" stroke-width="1"/></svg></div>
+            <div class="bcard-name">Peito</div>
+          </div>
+          <div class="bcard-cond-label">Condição</div>
+          <select class="bcard-select" onchange="updateInjury('peito',this.value)">
+            <option>Nenhum</option><option>Sangrando</option><option>Fraturado</option><option>Debilitado</option><option>Atordoado</option><option>Amputado</option><option>Ferimento Leve</option><option>Ferimento Sério</option><option>Ferimento Grave</option>
+          </select>
+          <div class="bcard-armor-row">
+            <span class="bcard-armor-label">Armadura</span>
+            <input class="bcard-armor-input body-armor" type="number" value="0" min="0" data-base="0">
+          </div>
+        </div>
+        <div class="body-card" id="sec-braco-dir">
+          <span class="bcard-badge">Ferido</span>
+          <div class="bcard-header">
+            <div class="bcard-icon"><svg viewBox="0 0 18 46" width="14" height="38"><rect x="2" y="1" width="14" height="22" rx="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4,22 L4,38 Q4,42 9,42 Q14,42 14,38 L14,22" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M4,30 Q9,32 14,30" fill="none" stroke="currentColor" stroke-width="0.9"/><path d="M5,40 L4,46 M8,41 L8,48 M11,41 L11,48 M14,40 L15,46" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+            <div class="bcard-name">Br. Direito</div>
+          </div>
+          <div class="bcard-cond-label">Condição</div>
+          <select class="bcard-select" onchange="updateInjury('braco-dir',this.value)">
+            <option>Nenhum</option><option>Sangrando</option><option>Fraturado</option><option>Debilitado</option><option>Atordoado</option><option>Amputado</option><option>Ferimento Leve</option><option>Ferimento Sério</option><option>Ferimento Grave</option>
+          </select>
+          <div class="bcard-armor-row">
+            <span class="bcard-armor-label">Armadura</span>
+            <input class="bcard-armor-input body-armor" type="number" value="0" min="0" data-base="0">
+          </div>
+        </div>
+
+        <!-- Row 3: Abdômen centralizado -->
+        <div></div>
+        <div class="body-card" id="sec-abdomen">
+          <span class="bcard-badge">Ferido</span>
+          <div class="bcard-header">
+            <div class="bcard-icon"><svg viewBox="0 0 32 30" width="26" height="24"><rect x="1" y="1" width="30" height="28" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><line x1="16" y1="1" x2="16" y2="29" stroke="currentColor" stroke-width="1"/><line x1="1" y1="10" x2="31" y2="10" stroke="currentColor" stroke-width="0.9"/><line x1="1" y1="19" x2="31" y2="19" stroke="currentColor" stroke-width="0.9"/><circle cx="16" cy="15" r="3" fill="none" stroke="currentColor" stroke-width="1"/></svg></div>
             <div class="bcard-name">Abdômen</div>
           </div>
           <div class="bcard-cond-label">Condição</div>
@@ -1258,39 +1206,13 @@ body {
             <input class="bcard-armor-input body-armor" type="number" value="0" min="0" data-base="0">
           </div>
         </div>
-        <!-- P. DIREITA -->
-        <div class="body-card " id="sec-perna-dir">
+        <div></div>
+
+        <!-- Row 4: Perna Esq | espaço | Perna Dir -->
+        <div class="body-card" id="sec-perna-esq">
           <span class="bcard-badge">Ferido</span>
           <div class="bcard-header">
-            <div class="bcard-icon"><svg viewBox="0 0 20 50" width="18" height="46">
-  <rect x="2" y="1" width="16" height="26" rx="5" fill="none" stroke="currentColor" stroke-width="1.6"/>
-  <ellipse cx="10" cy="28" rx="8" ry="5" fill="none" stroke="currentColor" stroke-width="1.3"/>
-  <path d="M4,31 L4,44 Q4,48 10,48 Q16,48 16,44 L16,31" fill="none" stroke="currentColor" stroke-width="1.4"/>
-  <path d="M2,46 L18,46 L20,52 L0,52 Z" fill="none" stroke="currentColor" stroke-width="1.2"/>
-  <path d="M4,14 Q10,17 16,14" fill="none" stroke="currentColor" stroke-width="0.9"/>
-</svg></div>
-            <div class="bcard-name">P. Direita</div>
-          </div>
-          <div class="bcard-cond-label">Condição</div>
-          <select class="bcard-select" onchange="updateInjury('perna-dir',this.value)">
-            <option>Nenhum</option><option>Sangrando</option><option>Fraturado</option><option>Debilitado</option><option>Atordoado</option><option>Amputado</option><option>Ferimento Leve</option><option>Ferimento Sério</option><option>Ferimento Grave</option>
-          </select>
-          <div class="bcard-armor-row">
-            <span class="bcard-armor-label">Armadura</span>
-            <input class="bcard-armor-input body-armor" type="number" value="0" min="0" data-base="0">
-          </div>
-        </div>
-        <!-- P. ESQUERDA -->
-        <div class="body-card " id="sec-perna-esq">
-          <span class="bcard-badge">Ferido</span>
-          <div class="bcard-header">
-            <div class="bcard-icon"><svg viewBox="0 0 20 50" width="18" height="46">
-  <rect x="2" y="1" width="16" height="26" rx="5" fill="none" stroke="currentColor" stroke-width="1.6"/>
-  <ellipse cx="10" cy="28" rx="8" ry="5" fill="none" stroke="currentColor" stroke-width="1.3"/>
-  <path d="M4,31 L4,44 Q4,48 10,48 Q16,48 16,44 L16,31" fill="none" stroke="currentColor" stroke-width="1.4"/>
-  <path d="M2,46 L18,46 L20,52 L0,52 Z" fill="none" stroke="currentColor" stroke-width="1.2"/>
-  <path d="M4,14 Q10,17 16,14" fill="none" stroke="currentColor" stroke-width="0.9"/>
-</svg></div>
+            <div class="bcard-icon"><svg viewBox="0 0 20 50" width="16" height="42"><rect x="2" y="1" width="16" height="22" rx="5" fill="none" stroke="currentColor" stroke-width="1.6"/><ellipse cx="10" cy="24" rx="8" ry="5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M4,27 L4,40 Q4,44 10,44 Q16,44 16,40 L16,27" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2,42 L18,42 L20,48 L0,48 Z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></div>
             <div class="bcard-name">P. Esquerda</div>
           </div>
           <div class="bcard-cond-label">Condição</div>
@@ -1302,6 +1224,23 @@ body {
             <input class="bcard-armor-input body-armor" type="number" value="0" min="0" data-base="0">
           </div>
         </div>
+        <div></div>
+        <div class="body-card" id="sec-perna-dir">
+          <span class="bcard-badge">Ferido</span>
+          <div class="bcard-header">
+            <div class="bcard-icon"><svg viewBox="0 0 20 50" width="16" height="42"><rect x="2" y="1" width="16" height="22" rx="5" fill="none" stroke="currentColor" stroke-width="1.6"/><ellipse cx="10" cy="24" rx="8" ry="5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M4,27 L4,40 Q4,44 10,44 Q16,44 16,40 L16,27" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2,42 L18,42 L20,48 L0,48 Z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></div>
+            <div class="bcard-name">P. Direita</div>
+          </div>
+          <div class="bcard-cond-label">Condição</div>
+          <select class="bcard-select" onchange="updateInjury('perna-dir',this.value)">
+            <option>Nenhum</option><option>Sangrando</option><option>Fraturado</option><option>Debilitado</option><option>Atordoado</option><option>Amputado</option><option>Ferimento Leve</option><option>Ferimento Sério</option><option>Ferimento Grave</option>
+          </select>
+          <div class="bcard-armor-row">
+            <span class="bcard-armor-label">Armadura</span>
+            <input class="bcard-armor-input body-armor" type="number" value="0" min="0" data-base="0">
+          </div>
+        </div>
+
       </div><!-- /body-cards-grid -->
     </div><!-- /right col -->
   </div><!-- /2-col grid -->
@@ -1483,6 +1422,7 @@ const competencias = [
   { nome:'Medicina', attr:'CONH', id:'conh' },
   { nome:'Psicológico', attr:'INT', id:'int' },
   { nome:'Reflexos', attr:'AGIL', id:'agil' },
+  { nome:'Vontade', attr:'POD', id:'pod' },
 ];
 (function buildComps() {
   const tb = document.getElementById('comp-body');
@@ -1579,9 +1519,9 @@ function recalcAtual() {
 
 /* ── RADAR ── */
 function updateRadar() {
-  const MAX=20, cx=130, cy=130, r=84;
-  const vals = ['agil','cons','conh','for','int'].map(a=>getAttr(a));
-  const angles = [-90,-18,54,126,198];
+  const MAX=20, cx=200, cy=200, r=90;
+  const vals = ['agil','cons','conh','for','int','pod'].map(a=>getAttr(a));
+  const angles = [-90,-30,30,90,150,210];
   const pts = vals.map((v,i) => {
     const frac = Math.min(Math.max(v,0),MAX)/MAX;
     const a = angles[i]*Math.PI/180;
@@ -1591,7 +1531,6 @@ function updateRadar() {
   document.getElementById('radar-poly').setAttribute('points', ptStr);
   const inner = document.getElementById('radar-poly-inner');
   if(inner) inner.setAttribute('points', ptStr);
-  // Update vertex dots
   pts.forEach((p,i) => {
     const dot = document.getElementById('rdot-'+i);
     if(dot){ dot.setAttribute('cx', p[0]); dot.setAttribute('cy', p[1]); dot.setAttribute('r','4'); }
@@ -1657,7 +1596,7 @@ function collectData() {
     if(el) d['f_'+k] = el.value;
   });
   d.f_origem = document.getElementById('f-origem')?.value||'';
-  ['agil','cons','conh','for','int'].forEach(k=>{
+  ['agil','cons','conh','for','int','pod'].forEach(k=>{
     d['attr_'+k] = document.getElementById('attr-'+k)?.value||'1';
   });
   ['vit','ener','sang','medo'].forEach(k=>{
@@ -1687,7 +1626,7 @@ function applyData(d) {
   if(d.photo){ photoData=d.photo; const pp=document.getElementById('photo-preview'); if(pp){pp.src=d.photo;pp.style.display='block';} const ph=document.getElementById('photo-placeholder');if(ph)ph.style.display='none'; }
   ['nome','idade','ocup','jogador','patente','aparencia'].forEach(k=>{ const el=document.getElementById('f-'+k); if(el&&d['f_'+k]!==undefined) el.value=d['f_'+k]; });
   if(d.f_origem){ const el=document.getElementById('f-origem'); if(el) el.value=d.f_origem; }
-  ['agil','cons','conh','for','int'].forEach(k=>{ const el=document.getElementById('attr-'+k); if(el&&d['attr_'+k]!==undefined) el.value=d['attr_'+k]; });
+  ['agil','cons','conh','for','int','pod'].forEach(k=>{ const el=document.getElementById('attr-'+k); if(el&&d['attr_'+k]!==undefined) el.value=d['attr_'+k]; });
   ['vit','ener','sang','medo'].forEach(k=>{ const el=document.getElementById(k+'-perd'); if(el&&d['perd_'+k]!==undefined) el.value=d['perd_'+k]; });
   if(d.comps){ const els=document.querySelectorAll('[data-idx]'); d.comps.forEach((v,i)=>{ if(els[i]) els[i].value=v; }); }
   if(d.compmod){ const els=document.querySelectorAll('[data-modif]'); d.compmod.forEach((v,i)=>{ if(els[i]) els[i].value=v; }); }
@@ -1867,7 +1806,7 @@ function newCharFromModal(){
 function clearForm(){
   document.querySelectorAll('.field-input').forEach(e=>e.value='');
   document.querySelectorAll('.field-select').forEach(e=>e.selectedIndex=0);
-  ['agil','cons','conh','for','int'].forEach(k=>{const e=document.getElementById('attr-'+k);if(e)e.value=1;});
+  ['agil','cons','conh','for','int','pod'].forEach(k=>{const e=document.getElementById('attr-'+k);if(e)e.value=1;});
   ['vit','ener','sang','medo'].forEach(k=>{const e=document.getElementById(k+'-perd');if(e)e.value=0;});
   document.querySelectorAll('.bcard-select').forEach(e=>{
     e.value='Nenhum';
@@ -1958,5 +1897,6 @@ function loadFromUrl(){
   setTimeout(autoResizeAll,100);
 })();
 </script>
+<div style="position:fixed;bottom:8px;right:10px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);opacity:0.45;pointer-events:none;letter-spacing:1px;z-index:9999;">v0.2</div>
 </body>
 </html>
