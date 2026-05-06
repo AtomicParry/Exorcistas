@@ -506,7 +506,55 @@ body.ro .sbtn { display: none; }
   color: var(--greyDim); text-transform: uppercase;
 }
 
-/* ═══ NEON ACCENT LINES ═══ */
+/* ═══ ORIGEM ═══ */
+.origem-opt {
+  flex: 1; cursor: pointer;
+  display: flex; flex-direction: column; align-items: flex-start; gap: .3rem;
+  padding: .65rem .8rem;
+  background: #0a000a;
+  border: 1px solid var(--greyDim);
+  border-top: 2px solid var(--greyDim);
+  position: relative; overflow: hidden;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+}
+.origem-opt::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--neon) 0%, transparent 60%);
+  opacity: 0; transition: opacity .2s;
+}
+.origem-opt:hover { border-color: var(--neon2); background: #110011; }
+.origem-opt:hover::before { opacity: .04; }
+.origem-opt.selected {
+  border-color: var(--neon) !important;
+  border-top-color: var(--neon) !important;
+  background: #130013;
+  box-shadow: inset 0 0 20px rgba(204,0,255,.08), 0 0 10px rgba(204,0,255,.12);
+}
+.origem-opt.selected::before { opacity: .07; }
+.orig-icon {
+  font-size: 1rem; color: var(--greyDim);
+  transition: color .2s, text-shadow .2s;
+  line-height: 1;
+}
+.origem-opt.selected .orig-icon {
+  color: var(--neon);
+  text-shadow: 0 0 10px var(--neonGlow);
+}
+.orig-name {
+  font-family: 'Black Ops One', cursive;
+  font-size: .72rem; letter-spacing: .12em;
+  color: var(--grey); text-transform: uppercase;
+  transition: color .2s;
+}
+.origem-opt.selected .orig-name { color: var(--white); }
+.orig-desc {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .48rem; line-height: 1.5;
+  letter-spacing: .06em; color: var(--greyDim);
+  text-transform: uppercase;
+}
 .neon-line {
   height: 1px; background: linear-gradient(90deg, var(--neon), transparent);
   margin: .2rem 0; opacity: .3;
@@ -562,6 +610,14 @@ body.ro .sbtn { display: none; }
         <div class="field"><label>MISSÕES</label><input id="fm" type="number" value="0" min="0" oninput="onChange()"></div>
         <div class="field"><label>SCRIP (S$)</label><input id="fsc" placeholder="0" oninput="onChange()"></div>
         <div class="field span-full"><label>AFLIÇÕES</label><input id="fa" placeholder="—" oninput="onChange()"></div>
+        <div class="field span-full">
+          <label>ORIGEM</label>
+          <select id="forigem" onchange="onChange()" style="background:transparent;border:none;border-bottom:1px solid var(--greyDim);color:var(--white);font-family:'Oswald',sans-serif;font-size:1rem;font-weight:300;padding:.2rem 0;outline:none;width:100%;cursor:pointer;transition:border-color .2s;appearance:none;-webkit-appearance:none;">
+            <option value="" style="background:#111;color:var(--grey)">— selecione —</option>
+            <option value="humano" style="background:#111;color:var(--white)">Humano Comum</option>
+            <option value="agraciado" style="background:#111;color:var(--white)">Agraciado</option>
+          </select>
+        </div>
 
         <!-- XP / AVANÇOS -->
         <div class="xp-block">
@@ -1012,12 +1068,13 @@ function ask(nm,d){
 function collect(){
   const conds={};CONDS.forEach(c=>{conds[c.id]={cur:CS[c.id].cur,max:CS[c.id].max};});
   const skills={...SS};
-  return{v:9,nome:gv('fn'),cain:gv('fc'),semente:gv('fs'),cat:gv('fcat'),missoes:gv('fm'),scrip:gv('fsc'),aflicoes:gv('fa'),xp:xpCur,av:avCur,conds,skills,agenda:gv('tag'),blasfemia:gv('tbl'),marcas:gv('tmk'),inventario:gv('tinv'),portrait,talismaIntegrity};
+  return{v:9,nome:gv('fn'),cain:gv('fc'),semente:gv('fs'),cat:gv('fcat'),missoes:gv('fm'),scrip:gv('fsc'),aflicoes:gv('fa'),origem:gv('forigem'),xp:xpCur,av:avCur,conds,skills,agenda:gv('tag'),blasfemia:gv('tbl'),marcas:gv('tmk'),inventario:gv('tinv'),portrait,talismaIntegrity};
 }
 function applyData(d){
   if(!d)return;
   sv('fn',d.nome);sv('fc',d.cain);sv('fs',d.semente);
   sv('fcat',d.cat||'1');sv('fm',d.missoes||'0');sv('fsc',d.scrip);sv('fa',d.aflicoes);
+  if(d.origem){sv('forigem',d.origem);}
   if(d.xp!=null)xpCur=d.xp;
   if(d.av!=null){avCur=d.av;rav();}
   rxp();
