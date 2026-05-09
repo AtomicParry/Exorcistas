@@ -169,35 +169,6 @@ body::before {
   pointer-events: none;
 }
 
-/* Portrait */
-.portrait {
-  width: 140px; flex-shrink: 0;
-  border-right: 3px solid var(--neon);
-  position: relative; cursor: pointer; overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--deep);
-  transition: background .2s;
-}
-.portrait:hover { background: #110011; }
-.portrait img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0; }
-.phint {
-  display: flex; flex-direction: column; align-items: center; gap: .4rem;
-  pointer-events: none; z-index: 1;
-  font-family: 'Share Tech Mono', monospace; font-size: .5rem;
-  letter-spacing: .15em; color: var(--greyDim);
-  text-transform: uppercase; text-align: center; padding: .5rem;
-}
-.phint svg { width: 28px; height: 28px; stroke: var(--neon2); fill: none; stroke-width: 1.5; opacity: .5; }
-#pinput { display: none; }
-.prm {
-  position: absolute; top: 4px; right: 4px; z-index: 2;
-  background: rgba(0,0,0,.8); border: 1px solid var(--red);
-  color: var(--red); font-size: .6rem; padding: 2px 5px; cursor: pointer;
-  font-family: 'Share Tech Mono', monospace; display: none;
-}
-.portrait.has-img .phint { display: none; }
-.portrait.has-img .prm { display: block; }
-
 /* Header title area */
 .htext {
   flex: 1; padding: 1.5rem 2rem;
@@ -658,7 +629,6 @@ body.ro .sbtn { display: none; }
   .tc { grid-template-columns: 1fr; }
   .body { padding: 1rem; }
   .cg { grid-template-columns: 1fr; }
-  .portrait { width: 90px; }
   .xp-block { grid-template-columns: 1fr 1fr; }
 }
 </style>
@@ -679,15 +649,6 @@ body.ro .sbtn { display: none; }
 
   <!-- HEADER -->
   <div class="header">
-    <div class="portrait" id="pslot" onclick="document.getElementById('pinput').click()">
-      <input type="file" id="pinput" accept="image/*" onchange="loadPortrait(event)">
-      <div class="phint">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
-        INSERIR<br>IMAGEM
-      </div>
-      <img id="pimg" src="" alt="" style="display:none">
-      <button class="prm" onclick="rmPortrait(event)">✕</button>
-    </div>
     <div class="htext">
       <div class="org-tag">// ORGANIZAÇÃO C.A.I.N. — ARQUIVO Nº██████ //</div>
       <div class="main-title">EXORCISTA</div>
@@ -808,7 +769,7 @@ function compress(obj){const j=JSON.stringify(obj);const b=pako.deflate(j);let s
 function decompress(s){s=s.replace(/-/g,'+').replace(/_/g,'/');const b=atob(s);const u=Uint8Array.from(b,c=>c.charCodeAt(0));return JSON.parse(pako.inflate(u,{to:'string'}));}
 
 /* ═══ ESTADO ═══ */
-let isRO=false, liveUrl='', linkTimer=null, portrait='', xpCur=0, avCur=0;
+let isRO=false, liveUrl='', linkTimer=null, xpCur=0, avCur=0;
 
 const CONDS=[
   {id:'talisma',  label:'TALISMÃ DE EXECUÇÃO', max:6,  dot:'red', cur:6},
@@ -1171,7 +1132,7 @@ function ask(nm,d){
 function collect(){
   const conds={};CONDS.forEach(c=>{conds[c.id]={cur:CS[c.id].cur,max:CS[c.id].max};});
   const skills={...SS};
-  return{v:9,nome:gv('fn'),cain:gv('fc'),semente:gv('fs'),cat:gv('fcat'),missoes:gv('fm'),scrip:gv('fsc'),aflicoes:gv('fa'),origem:gv('forigem'),xp:xpCur,av:avCur,conds,skills,agenda:gv('tag'),blasfemia:gv('tbl'),marcas:gv('tmk'),inventario:gv('tinv'),portrait,talismaIntegrity};
+  return{v:9,nome:gv('fn'),cain:gv('fc'),semente:gv('fs'),cat:gv('fcat'),missoes:gv('fm'),scrip:gv('fsc'),aflicoes:gv('fa'),origem:gv('forigem'),xp:xpCur,av:avCur,conds,skills,agenda:gv('tag'),blasfemia:gv('tbl'),marcas:gv('tmk'),inventario:gv('tinv'),talismaIntegrity};
 }
 function applyData(d){
   if(!d)return;
@@ -1203,15 +1164,21 @@ function applyData(d){
   [['tag',d.agenda],['tbl',d.blasfemia],['tmk',d.marcas],['tinv',d.inventario]].forEach(([id,v])=>{
     const el=document.getElementById(id);if(el&&v!=null){el.value=v;grow(el);}
   });
-  if(d.portrait)setPt(d.portrait);
 }
 
 /* ═══ SHARE — URL comprimida ═══ */
+function pageBase(){
+  try{
+    const h=location.href;
+    if(/^(file|https?):\/\//i.test(h)) return h.split('?')[0].split('#')[0];
+  }catch(e){}
+  return '';
+}
+
 function buildShareUrl(){
   const payload=compress(collect());
-  let base='';
-  try{const h=location.href;if(/^(file|https?):\/\//i.test(h))base=h.split('?')[0].split('#')[0];}catch(e){}
-  return base?(base+'?d='+payload):('?d='+payload);
+  const base=pageBase();
+  return base ? base+'?d='+payload : '?d='+payload;
 }
 
 function genLink(){
@@ -1243,8 +1210,14 @@ function onChange(){
 function copyLink(){
   if(!liveUrl)return;
   const btn=document.getElementById('cpbtn');
-  navigator.clipboard.writeText(liveUrl).catch(()=>{const ta=document.createElement('textarea');ta.value=liveUrl;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);});
-  btn.textContent='✓ COPIADO';btn.classList.add('done');
+  navigator.clipboard.writeText(liveUrl).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=liveUrl; ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    try{document.execCommand('copy');}catch(e){}
+    document.body.removeChild(ta);
+  });
+  btn.textContent='✓ COPIADO'; btn.classList.add('done');
   setTimeout(()=>{btn.textContent='COPIAR';btn.classList.remove('done');},2200);
 }
 
@@ -1278,6 +1251,203 @@ rxp();
   }catch(err){
     console.error('[CAIN] boot:',err);
     setSt('// ERRO AO CARREGAR DADOS DO LINK //','err');
+  }
+})();
+</script>
+</body>
+</html>
+
+// ▼▼▼ SUBSTITUA pela URL do seu Firebase Realtime Database ▼▼▼
+const FIREBASE_URL = 'https://SEU-PROJETO-default-rtdb.firebaseio.com';
+// ▲▲▲ Exemplo: 'https://cain-rpg-abc123-default-rtdb.firebaseio.com' ▲▲▲
+
+const firebaseOk = !FIREBASE_URL.includes('SEU-PROJETO');
+
+function genId(){
+  // Gera ID de 8 chars: letras+números
+  const chars='abcdefghijkmnpqrstuvwxyz23456789';
+  let id='';
+  for(let i=0;i<8;i++) id+=chars[Math.floor(Math.random()*chars.length)];
+  return id;
+}
+
+function pageBase(){
+  try{
+    const h=location.href;
+    if(/^(file|https?):\/\//i.test(h)) return h.split('?')[0].split('#')[0];
+  }catch(e){}
+  return '';
+}
+
+async function fbSave(id, data){
+  const res = await fetch(`${FIREBASE_URL}/fichas/${id}.json`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  if(!res.ok) throw new Error('Firebase HTTP '+res.status);
+}
+
+async function fbLoad(id){
+  const res = await fetch(`${FIREBASE_URL}/fichas/${id}.json`);
+  if(!res.ok) throw new Error('Firebase HTTP '+res.status);
+  const data = await res.json();
+  if(!data) throw new Error('Ficha não encontrada');
+  return data;
+}
+
+async function genLink(){
+  if(isRO) return;
+
+  if(!firebaseOk){
+    // Firebase não configurado — fallback para URL comprimida
+    const url = pageBase()+'?d='+compress(collect());
+    liveUrl = url;
+    try{history.replaceState(null,'',url);}catch(e){}
+    try{localStorage.setItem('cain-own:'+url.slice(-24),'1');}catch(e){}
+    setSt('⚠ Firebase não configurado. URL longa gerada.','warn');
+    document.getElementById('sbtn').textContent='ATUALIZAR LINK';
+    document.getElementById('cpbtn').classList.add('on');
+    return;
+  }
+
+  const btn = document.getElementById('sbtn');
+  btn.disabled = true;
+  btn.textContent = 'SALVANDO…';
+  setSt('SALVANDO FICHA…','warn');
+
+  try{
+    // Cria ID se não tiver, reutiliza se já tiver
+    let id = sheetId;
+    if(!id){
+      id = genId();
+      // Garante que não colidiu
+      const check = await fetch(`${FIREBASE_URL}/fichas/${id}.json`);
+      const existing = await check.json();
+      if(existing) id = genId(); // tenta de novo
+      sheetId = id;
+      try{localStorage.setItem('cain-own:'+id,'1');}catch(e){}
+    }
+
+    await fbSave(id, collect());
+
+    const base = pageBase();
+    const url  = base ? base+'?id='+id : '?id='+id;
+    liveUrl = url;
+    try{history.replaceState(null,'',url);}catch(e){}
+
+    setSt(`<a href="${url}" target="_blank">${url}</a>`,'ok');
+    btn.textContent = 'ATUALIZAR LINK';
+    btn.disabled = false;
+    document.getElementById('cpbtn').classList.add('on');
+  }catch(err){
+    console.error('[CAIN] genLink:', err);
+    setSt('ERRO AO SALVAR: '+err.message,'err');
+    btn.disabled = false;
+    btn.textContent = 'TENTAR NOVAMENTE';
+  }
+}
+
+let sheetId = null; // ID da ficha atual no Firebase
+
+function onChange(){
+  if(isRO) return;
+  clearTimeout(linkTimer);
+  // Só auto-salva se já tiver um ID criado
+  if(sheetId && firebaseOk){
+    linkTimer = setTimeout(async()=>{
+      try{
+        await fbSave(sheetId, collect());
+        // Flash sutil de "salvo"
+        const st=document.getElementById('sst');
+        if(st.classList.contains('ok')){
+          const prev=st.innerHTML;
+          st.innerHTML='✓ SALVO';
+          setTimeout(()=>{st.innerHTML=prev;},1500);
+        }
+      }catch(e){}
+    }, 1200);
+  }
+}
+
+function copyLink(){
+  if(!liveUrl) return;
+  const btn=document.getElementById('cpbtn');
+  navigator.clipboard.writeText(liveUrl).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=liveUrl; ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    try{document.execCommand('copy');}catch(e){}
+    document.body.removeChild(ta);
+  });
+  btn.textContent='✓ COPIADO'; btn.classList.add('done');
+  setTimeout(()=>{btn.textContent='COPIAR';btn.classList.remove('done');},2200);
+}
+
+/* ═══ BOOT ═══ */
+buildCards();
+buildSkills();
+document.querySelectorAll('.ta').forEach(t=>grow(t));
+rxp();
+
+(async function boot(){
+  let search='';try{search=location.search;}catch(e){}
+  const params = new URLSearchParams(search);
+  const id  = params.get('id');   // link curto Firebase
+  const raw = params.get('d');    // fallback URL comprimida
+
+  if(id){
+    // ── Carrega do Firebase ──
+    setSt('CARREGANDO FICHA…','warn');
+    let owned=false;
+    try{owned=!!localStorage.getItem('cain-own:'+id);}catch(e){}
+    isRO = !owned;
+
+    if(isRO){
+      document.body.classList.add('ro');
+      document.getElementById('rob').classList.add('on');
+    }
+
+    try{
+      const data = await fbLoad(id);
+      applyData(data);
+      if(!isRO){
+        sheetId = id;
+        const base = pageBase();
+        const url  = base ? base+'?id='+id : '?id='+id;
+        liveUrl = url;
+        setSt(`<a href="${url}" target="_blank">${url}</a>`,'ok');
+        document.getElementById('sbtn').textContent='ATUALIZAR LINK';
+        document.getElementById('cpbtn').classList.add('on');
+      } else {
+        setSt('// ACESSO SOMENTE LEITURA — FICHA DE OUTRO AGENTE //');
+      }
+    }catch(err){
+      console.error('[CAIN] boot id:', err);
+      setSt('// ERRO AO CARREGAR FICHA //','err');
+    }
+
+  } else if(raw){
+    // ── Fallback: URL comprimida ──
+    try{
+      const data = decompress(raw);
+      const ownerKey='cain-own:'+('?d='+raw).slice(-24);
+      let owned=false;try{owned=!!localStorage.getItem(ownerKey);}catch(e){}
+      isRO = !owned;
+      if(isRO){
+        document.body.classList.add('ro');
+        document.getElementById('rob').classList.add('on');
+        setSt('// ACESSO SOMENTE LEITURA — FICHA DE OUTRO AGENTE //');
+      }else{
+        liveUrl = location.href;
+        setSt('⚠ Link antigo (URL longa). Clique em GERAR LINK para encurtar.','warn');
+        document.getElementById('sbtn').textContent='GERAR LINK CURTO';
+        document.getElementById('cpbtn').classList.add('on');
+      }
+      applyData(data);
+    }catch(err){
+      setSt('// ERRO AO CARREGAR DADOS DO LINK //','err');
+    }
   }
 })();
 </script>
