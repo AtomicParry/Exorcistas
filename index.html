@@ -1222,33 +1222,11 @@ function genLink(){
     try{history.replaceState(null,'',url);}catch(e){}
     const ownerKey='cain-own:'+url.slice(-24);
     try{localStorage.setItem(ownerKey,'1');}catch(e){}
-
-    // Mostra a URL longa enquanto encurta
-    setSt('ENCURTANDO LINK…','warn');
-    document.getElementById('sbtn').textContent='AGUARDE…';
-    document.getElementById('sbtn').disabled=true;
-
-    // Tenta encurtar via TinyURL (CORS aberto, sem chave)
-    fetch('https://tinyurl.com/api-create.php?url=' + encodeURIComponent(url))
-      .then(r=>{ if(!r.ok) throw new Error('tinyurl'); return r.text(); })
-      .then(short=>{
-        short = short.trim();
-        if(!short.startsWith('http')) throw new Error('resposta inválida');
-        liveUrl = short; // copia para clipboard vai usar o link curto
-        setSt(`<a href="${short}" target="_blank">${short}</a>`,'ok');
-        document.getElementById('sbtn').textContent='ATUALIZAR LINK';
-        document.getElementById('sbtn').disabled=false;
-        document.getElementById('cpbtn').classList.add('on');
-      })
-      .catch(()=>{
-        // Fallback: mostra a URL longa truncada
-        liveUrl = url;
-        const display=url.length>62?url.slice(0,59)+'…':url;
-        setSt(`<a href="${url}" target="_blank">${display}</a>`,'ok');
-        document.getElementById('sbtn').textContent='ATUALIZAR LINK';
-        document.getElementById('sbtn').disabled=false;
-        document.getElementById('cpbtn').classList.add('on');
-      });
+    const display=url.length>62?url.slice(0,59)+'…':url;
+    setSt(`<a href="${url}" target="_blank">${display}</a>`,'ok');
+    document.getElementById('sbtn').textContent='ATUALIZAR LINK';
+    document.getElementById('sbtn').disabled=false;
+    document.getElementById('cpbtn').classList.add('on');
   }catch(err){
     console.error('[CAIN] genLink:',err);
     setSt('ERRO: '+err.message,'err');
