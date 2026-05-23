@@ -495,6 +495,7 @@ body::before {
 }
 .ccur.maxed { color: var(--red); text-shadow: 0 0 14px rgba(255,34,68,.6); }
 .ccur.neg   { color: #60a5fa; text-shadow: 0 0 14px rgba(96,165,250,.5); }
+.ccur.vita-neg { color: var(--red); text-shadow: 0 0 12px rgba(255,34,68,.5); }
 .csep { font-family: 'Share Tech Mono', monospace; font-size: 1rem; color: var(--greyDim); line-height: 1; }
 .cmxw { display: flex; flex-direction: column; align-items: flex-start; }
 .cmxl { font-family: 'Share Tech Mono', monospace; font-size: .38rem; letter-spacing: .15em; color: var(--greyDim); text-transform: uppercase; margin-bottom: 1px; }
@@ -513,6 +514,55 @@ body::before {
 .cbar.negb { background: #3b82f6; }
 @keyframes ofl { 0% { background: rgba(255,34,68,.25); } 100% { background: var(--deep); } }
 .ofl { animation: ofl .6s ease forwards; }
+
+/* Vitalidade negativa → vermelho, crítico → pisca */
+@keyframes vitaCritical {
+  0%,100% { border-top-color: var(--red); box-shadow: inset 0 0 15px rgba(255,34,68,.12), 0 0 10px rgba(255,34,68,.1); }
+  50%      { border-top-color: #ff6688;   box-shadow: inset 0 0 35px rgba(255,34,68,.3),  0 0 22px rgba(255,34,68,.28); }
+}
+#card-vitalidade.vita-critical { animation: vitaCritical .9s ease-in-out infinite !important; }
+#card-vitalidade.vita-critical .cn   { color: var(--red) !important; }
+#card-vitalidade.vita-critical .ccur { color: var(--red) !important; text-shadow: 0 0 16px rgba(255,34,68,.7) !important; }
+
+/* Cat points block */
+.catpts-block {
+  grid-column:1/-1; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap;
+  padding:.55rem .85rem; margin-top:.2rem; background:#0a000a; border:1px solid var(--greyDim);
+}
+.catpts-lbl { font-family:'Black Ops One',cursive; font-size:.62rem; letter-spacing:.15em; color:var(--neon); white-space:nowrap; flex-shrink:0; text-shadow:0 0 8px var(--neonGlow); }
+.catpts-val { font-family:'Bebas Neue',cursive; font-size:1.4rem; color:var(--neon); min-width:2ch; text-align:center; text-shadow:0 0 8px var(--neonGlow); }
+.catpts-hint { font-family:'Share Tech Mono',monospace; font-size:.5rem; color:var(--grey); flex:1; }
+.catpts-spend-btn {
+  font-family:'Share Tech Mono',monospace; font-size:.5rem; letter-spacing:.1em;
+  text-transform:uppercase; background:transparent;
+  border:1px solid var(--greyDim); color:var(--grey);
+  padding:.25rem .55rem; cursor:pointer; transition:all .15s; white-space:nowrap;
+}
+.catpts-spend-btn:hover { border-color:var(--neon); color:var(--neon); }
+.catpts-spend-btn:disabled { opacity:.3; cursor:default; }
+
+/* Trait section */
+.trait-list { display:flex; flex-direction:column; gap:.45rem; }
+.trait-row { display:flex; align-items:center; gap:.5rem; }
+.trait-input {
+  flex:1; background:transparent; border:none; border-bottom:1px solid var(--greyDim);
+  color:var(--white); font-family:'Oswald',sans-serif; font-size:.95rem; font-weight:300;
+  padding:.2rem 0; outline:none; transition:border-color .2s;
+}
+.trait-input:focus { border-bottom-color:var(--neon); }
+.trait-del {
+  background:transparent; border:1px solid var(--greyDim); color:var(--grey);
+  font-size:.7rem; width:22px; height:22px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s;
+}
+.trait-del:hover { border-color:var(--red); color:var(--red); }
+.trait-add-btn {
+  font-family:'Share Tech Mono',monospace; font-size:.52rem; letter-spacing:.15em;
+  text-transform:uppercase; background:transparent;
+  border:1px solid var(--greyDim); color:var(--grey);
+  padding:.3rem .7rem; cursor:pointer; transition:all .15s; margin-top:.5rem; display:block;
+}
+.trait-add-btn:hover { border-color:var(--neon); color:var(--neon); }
 
 /* ═══ SKILLS ═══ */
 .sg { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: .4rem; }
@@ -731,6 +781,14 @@ body.ro .sbtn { display: none; }
           <button class="sbtn" id="sbtn" onclick="genLink()">GERAR LINK</button>
           <button class="cpbtn" id="cpbtn" onclick="copyLink()">COPIAR</button>
         </div>
+
+        <!-- PONTOS DE CATEGORIA -->
+        <div class="catpts-block">
+          <span class="catpts-lbl">◆ PONTOS CAT</span>
+          <span class="catpts-val" id="catpts-val">0</span>
+          <span class="catpts-hint">Gaste em condições — 1 ponto aumenta o máximo de qualquer condição em +1</span>
+          <div id="catpts-conds" style="display:flex;gap:.4rem;flex-wrap:wrap;"></div>
+        </div>
       </div>
     </div>
 
@@ -768,6 +826,13 @@ body.ro .sbtn { display: none; }
       </div>
     </div>
 
+    <!-- TRAITS -->
+    <div class="sec">
+      <div class="stitle">// TRAITS</div>
+      <div class="trait-list" id="trait-list"></div>
+      <button class="trait-add-btn" onclick="addTrait()">+ ADICIONAR TRAIT</button>
+    </div>
+
   </div>
   <div class="foot">// C.A.I.N. — CONTROLE E ANIQUILAÇÃO DE INFESTAÇÕES NEFASTAS // DOCUMENTO RESTRITO //</div>
 </div><!-- /sheet-frame -->
@@ -783,26 +848,29 @@ function decompress(s){s=s.replace(/-/g,'+').replace(/_/g,'/');const b=atob(s);c
 
 /* ═══ ESTADO ═══ */
 let isRO=false, liveUrl='', linkTimer=null, xpCur=0, avCur=0;
-let talismaBaseMax = 6;
+let skillPoints=0;
+let catPointsSpent=0;  // quantos pontos de cat já foram gastos
+let traits=[];        // array de strings
+
+// Vitalidade: base 8 em CAT 1, +2 por CAT
+function vitalMax(cat){ return 6 + (Math.max(1,parseInt(cat)||1)*2); }
 
 const CONDS=[
-  {id:'talisma',  label:'TALISMÃ DE EXECUÇÃO', max:6,  dot:'red', cur:6},
-  {id:'ferimento',label:'FERIMENTO',           max:3,  dot:'',    cur:0},
-  {id:'pulso',    label:'PULSO PSÍQUICO',      max:3,  dot:'',    cur:0},
-  {id:'pecado',   label:'PECADO ACUMULADO',    max:10, dot:'sin', cur:0},
-  {id:'ganchos',  label:'GANCHOS',             max:3,  dot:'',    cur:0},
-  {id:'agonia',   label:'AGONIA DIVINA',       max:3,  dot:'sin', cur:0},
-
+  {id:'vitalidade', label:'VITALIDADE',       max:10, dot:'red', cur:10},
+  {id:'pulso',      label:'PULSO PSÍQUICO',   max:3,  dot:'',    cur:0},
+  {id:'pecado',     label:'PECADO ACUMULADO', max:10, dot:'sin', cur:0},
+  {id:'ganchos',    label:'GANCHOS',          max:3,  dot:'',    cur:0},
+  {id:'agonia',     label:'AGONIA DIVINA',    max:3,  dot:'sin', cur:0},
 ];
 const CS={};
 CONDS.forEach(c=>{CS[c.id]={cur:c.cur??0,max:c.max};});
 
-/* Psique é controlada pela CAT — não é editável pelo usuário */
-const SKILLS=['Força','Furtividade','Observação','Conexão','Atletismo','Interface','Autoridade','Coordenação','Investigação','Negociação'];
+/* Perícias — Psique bloqueada (= CAT), resto editável */
+const SKILLS=['Força','Coordenação','Atletismo','Lábia','Observação','Furtividade','Intelecto','Constituição'];
 const PSIQUE_KEY='Psique';
 const SS={};
 SKILLS.forEach(s=>{SS[s]=0;});
-SS[PSIQUE_KEY]=1; // começa com CAT 1
+SS[PSIQUE_KEY]=1;
 
 /* ═══ HELPERS ═══ */
 function grow(ta){ta.parentNode.dataset.value=ta.value;}
@@ -811,13 +879,82 @@ function sv(id,v){const e=document.getElementById(id);if(e&&v!=null)e.value=v;}
 function fl(id){const e=document.getElementById(id);e.style.color='#00ff88';setTimeout(()=>{e.style.color='';},900);}
 function setSt(msg,cls){const e=document.getElementById('sst');e.innerHTML=msg;e.className='sst'+(cls?' '+cls:'');}
 
-/* ═══ CAT → PSIQUE = ceil(CAT/2) ═══ */
+/* ═══ CAT CHANGE ═══ */
 function onCatChange(){
   const cat=Math.max(1,Math.min(7,parseInt(gv('fcat'))||1));
-  SS[PSIQUE_KEY]=Math.ceil(cat/2);
-  const el=document.getElementById('sv-Psique');
-  if(el){el.textContent=SS[PSIQUE_KEY];el.className='sv neon';}
+
+  // Psique = CAT
+  SS[PSIQUE_KEY]=cat;
+  const pEl=document.getElementById('sv-Psique');
+  if(pEl){pEl.textContent=cat;pEl.className='sv neon';}
+
+  // Vitalidade max = 6 + cat*2
+  const newVMax=vitalMax(cat);
+  CS.vitalidade.max=newVMax;
+  const mxEl=document.getElementById('mx-vitalidade');
+  if(mxEl) mxEl.value=newVMax;
+  rc('vitalidade');
+
+  updateSkillCaps();
+  refreshSkillPoints();
+  refreshCatPoints();
   rxp();
+}
+
+function refreshCatPoints(){
+  const cat=Math.max(1,Math.min(7,parseInt(gv('fcat'))||1));
+  // Pontos disponíveis = CAT - 1 (gerado ao subir de nível) - já gastos
+  // Mínimo 0 disponível
+  const total=Math.max(0, cat-1);
+  const available=Math.max(0, total - catPointsSpent);
+  const el=document.getElementById('catpts-val');
+  if(el) el.textContent=available;
+  // Build spend buttons
+  const btn=document.getElementById('catpts-conds');
+  if(!btn) return;
+  btn.innerHTML='';
+  CONDS.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='catpts-spend-btn';
+    b.textContent='+1 '+c.label.split(' ')[0];
+    b.disabled=(available<=0||isRO);
+    b.onclick=()=>spendCatPoint(c.id);
+    btn.appendChild(b);
+  });
+}
+
+function spendCatPoint(condId){
+  const cat=Math.max(1,Math.min(7,parseInt(gv('fcat'))||1));
+  const total=Math.max(0,cat-1);
+  const available=Math.max(0,total-catPointsSpent);
+  if(available<=0||isRO) return;
+  catPointsSpent++;
+  CS[condId].max++;
+  const mxEl=document.getElementById('mx-'+condId);
+  if(mxEl) mxEl.value=CS[condId].max;
+  rc(condId);
+  refreshCatPoints();
+  onChange();
+}
+
+function updateSkillCaps(){
+  const cat=Math.max(1,Math.min(7,parseInt(gv('fcat'))||1));
+  SKILLS.forEach(nm=>{
+    const capEl=document.getElementById('scap-'+nm.replace(/[^a-zA-Z]/g,''));
+    if(capEl) capEl.textContent='/ '+cat;
+    // Clamp valor ao novo cap
+    if(SS[nm]>cat){ SS[nm]=cat; const el=document.getElementById('sv-'+nm); if(el) el.textContent=cat; }
+  });
+  refreshSkillPoints();
+}
+
+function refreshSkillPoints(){
+  const cat=Math.max(1,Math.min(7,parseInt(gv('fcat'))||1));
+  const totalPool=cat*2+1; // 3 pontos no CAT 1, +2 por CAT adicional
+  const used=SKILLS.reduce((acc,nm)=>acc+(SS[nm]||0),0);
+  skillPoints=Math.max(0,totalPool-used);
+  const el=document.getElementById('skill-pts');
+  if(el){ el.textContent=skillPoints; el.style.color=skillPoints>0?'var(--neon)':'var(--grey)'; }
 }
 
 /* ═══ XP ═══ */
@@ -827,287 +964,120 @@ function aav(d){if(isRO)return;avCur=Math.max(0,avCur+d);rav();onChange();}
 function rav(){document.getElementById('avv').textContent=avCur;}
 function rxp(){const n=xpCat(gv('fcat'));document.getElementById('xpv').textContent=xpCur;document.getElementById('xpn').textContent=n;document.getElementById('xhint').textContent=`${n} XP = 1 AVANÇO (CAT ${gv('fcat')||1})`;const b=document.getElementById('xbar');b.style.width=Math.min(xpCur/n,1)*100+'%';b.className='xbar'+(xpCur>=n?' rdy':'');}
 
-/* ═══ PORTRAIT ═══ */
-function loadPortrait(ev){if(isRO)return;const f=ev.target.files[0];if(!f)return;const img=new Image(),url=URL.createObjectURL(f);img.onload=()=>{const MAX=220,sc=Math.min(1,MAX/img.width);const c=document.createElement('canvas');c.width=img.width*sc;c.height=img.height*sc;c.getContext('2d').drawImage(img,0,0,c.width,c.height);setPt(c.toDataURL('image/jpeg',.78));URL.revokeObjectURL(url);onChange();};img.src=url;}
-function setPt(d){portrait=d;const i=document.getElementById('pimg');i.src=d;i.style.display='block';document.getElementById('pslot').classList.add('has-img');}
-function rmPortrait(ev){ev.stopPropagation();if(isRO)return;portrait='';const i=document.getElementById('pimg');i.src='';i.style.display='none';document.getElementById('pslot').classList.remove('has-img');document.getElementById('pinput').value='';onChange();}
-
-/* ═══════════════════════════════════════════════════
-   TALISMAN MECHANIC
-   O máximo do talismã começa em 6 e diminui 1 a cada
-   vez que zera (ferimento sobe 1). Nível de integridade
-   = ferimentos acumulados pelo talismã (max 3 níveis).
-
-   crack 0: máx 6, íntegro
-   crack 1: máx 5, rachado  (após 1º overflow)
-   crack 2: máx 4, partido  (após 2º overflow)
-   crack 3: máx 3, destruído(após 3º overflow)
-═══════════════════════════════════════════════════ */
-let talismaIntegrity = 0; // 0=íntegro, 1=rachado, 2=partido, 3=destruído
-const TALISMA_MAX_BY_LEVEL = [6, 5, 4, 3]; // máximo por nível de integridade
-
-// SVG de rachaduras para cada nível (progressivamente piores)
-const CRACK_SVGS = [
-  '', // nível 0 — sem rachaduras
-  // nível 1 — uma rachadura fina
-  `<svg width="100%" height="100%" viewBox="0 0 260 130" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">
-    <line x1="80" y1="0" x2="110" y2="50" stroke="#ff6600" stroke-width="1.2" opacity=".6"/>
-    <line x1="110" y1="50" x2="95" y2="90" stroke="#ff6600" stroke-width=".8" opacity=".45"/>
-    <line x1="110" y1="50" x2="135" y2="75" stroke="#ff6600" stroke-width=".6" opacity=".35"/>
-  </svg>`,
-  // nível 2 — múltiplas rachaduras
-  `<svg width="100%" height="100%" viewBox="0 0 260 130" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">
-    <line x1="80" y1="0" x2="110" y2="50" stroke="#ff3300" stroke-width="1.5" opacity=".7"/>
-    <line x1="110" y1="50" x2="90" y2="100" stroke="#ff3300" stroke-width="1" opacity=".6"/>
-    <line x1="110" y1="50" x2="145" y2="80" stroke="#ff3300" stroke-width=".8" opacity=".5"/>
-    <line x1="145" y1="80" x2="165" y2="130" stroke="#ff3300" stroke-width=".7" opacity=".4"/>
-    <line x1="200" y1="10" x2="175" y2="60" stroke="#ff3300" stroke-width="1" opacity=".5"/>
-    <line x1="175" y1="60" x2="190" y2="100" stroke="#ff3300" stroke-width=".7" opacity=".4"/>
-    <line x1="175" y1="60" x2="155" y2="80" stroke="#ff3300" stroke-width=".6" opacity=".35"/>
-    <circle cx="110" cy="50" r="2" fill="#ff6600" opacity=".5"/>
-    <circle cx="175" cy="60" r="1.5" fill="#ff6600" opacity=".4"/>
-  </svg>`,
-  // nível 3 — completamente destruído
-  `<svg width="100%" height="100%" viewBox="0 0 260 130" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">
-    <line x1="60"  y1="0"  x2="100" y2="45"  stroke="#ff0000" stroke-width="2"   opacity=".8"/>
-    <line x1="100" y1="45" x2="75"  y2="110" stroke="#ff0000" stroke-width="1.4" opacity=".7"/>
-    <line x1="100" y1="45" x2="150" y2="90"  stroke="#ff0000" stroke-width="1.2" opacity=".6"/>
-    <line x1="150" y1="90" x2="130" y2="130" stroke="#ff0000" stroke-width=".9"  opacity=".5"/>
-    <line x1="150" y1="90" x2="185" y2="115" stroke="#ff0000" stroke-width=".8"  opacity=".45"/>
-    <line x1="190" y1="5"  x2="160" y2="55"  stroke="#ff0000" stroke-width="1.5" opacity=".7"/>
-    <line x1="160" y1="55" x2="185" y2="95"  stroke="#ff0000" stroke-width="1.1" opacity=".6"/>
-    <line x1="160" y1="55" x2="135" y2="70"  stroke="#ff0000" stroke-width=".8"  opacity=".5"/>
-    <line x1="30"  y1="30" x2="65"  y2="80"  stroke="#ff0000" stroke-width="1"   opacity=".5"/>
-    <line x1="220" y1="40" x2="245" y2="90"  stroke="#ff0000" stroke-width=".9"  opacity=".45"/>
-    <circle cx="100" cy="45"  r="3"   fill="#ff2200" opacity=".7"/>
-    <circle cx="150" cy="90"  r="2.5" fill="#ff2200" opacity=".6"/>
-    <circle cx="160" cy="55"  r="2"   fill="#ff2200" opacity=".5"/>
-    <rect x="95"  y="40"  width="10" height="10" fill="none" stroke="#ff4400" stroke-width=".5" opacity=".3" transform="rotate(20 100 45)"/>
-    <rect x="145" y="85"  width="8"  height="8"  fill="none" stroke="#ff4400" stroke-width=".5" opacity=".25" transform="rotate(-15 150 90)"/>
-  </svg>`
-];
-
-function talismaMaxForCurrentLevel() {
-  return Math.max(1, talismaBaseMax - talismaIntegrity);
-}
-
-function setTalismaMax(v){
-  if(isRO)return;
-  const n=parseInt(v,10);
-  if(isNaN(n)||n<1)return;
-  talismaBaseMax=n;
-  CS.talisma.max=talismaMaxForCurrentLevel();
-  if(CS.talisma.cur>CS.talisma.max) CS.talisma.cur=CS.talisma.max;
-  updateTalismaVisual();
-  rc('talisma');
-  onChange();
-}
-
-function updateTalismaVisual() {
-  const card = document.getElementById('card-talisma');
-  if (!card) return;
-
-  // Remove crack classes
-  card.classList.remove('crack-0','crack-1','crack-2','crack-3');
-  card.classList.add('crack-' + Math.min(talismaIntegrity, 3));
-
-  // Update SVG cracks
-  let crackEl = card.querySelector('.talisma-cracks');
-  if (!crackEl) {
-    crackEl = document.createElement('div');
-    crackEl.className = 'talisma-cracks';
-    card.insertBefore(crackEl, card.firstChild);
-  }
-  crackEl.innerHTML = CRACK_SVGS[Math.min(talismaIntegrity, 3)];
-
-  // Update integrity pips
-  const pipsEl = document.getElementById('talisma-pips');
-  if (pipsEl) {
-    pipsEl.innerHTML = '';
-    const maxPips = 3;
-    for (let i = 0; i < maxPips; i++) {
-      const pip = document.createElement('span');
-      pip.className = 'pip';
-      if (i >= talismaIntegrity) {
-        pip.classList.add('s0'); // íntegro
-      } else if (talismaIntegrity === 1) {
-        pip.classList.add('s1'); // rachado
-      } else if (talismaIntegrity === 2) {
-        pip.classList.add(i < 2 ? 's2' : 's0');
-      } else {
-        pip.classList.add('s3'); // destruído
-      }
-      pipsEl.appendChild(pip);
-    }
-    // Corrigir: pips já gastos ficam degradados
-    const pips2 = pipsEl.querySelectorAll('.pip');
-    pips2.forEach((p,i) => {
-      p.className = 'pip';
-      if (i < talismaIntegrity) {
-        const states = ['s1','s2','s3'];
-        p.classList.add(states[Math.min(i, 2)]);
-      } else {
-        p.classList.add('s0');
-      }
-    });
-  }
-
-  // Update max field: show base max so user can edit it freely
-  const newMax = talismaMaxForCurrentLevel();
-  CS.talisma.max = newMax;
-  const mxEl = document.getElementById('mx-talisma');
-  if (mxEl) mxEl.value = talismaBaseMax;
-}
-
 /* ═══ CONDITIONS ═══ */
 function buildCards(){
   const g=document.getElementById('cg');
   CONDS.forEach(c=>{
     const card=document.createElement('div');
-    card.className='cc';card.id='card-'+c.id;
+    card.className='cc'; card.id='card-'+c.id;
     const dotCls=c.dot?` dot-${c.dot}`:'';
-
-    if (c.id === 'talisma') {
-      // Card especial do talismã com linha de integridade
-      card.innerHTML=`
-        <div class="integrity-row">
-          <span class="integrity-lbl">INTEGRIDADE</span>
-          <div class="integrity-pips" id="talisma-pips">
-            <span class="pip s0"></span>
-            <span class="pip s0"></span>
-            <span class="pip s0"></span>
+    card.innerHTML=`
+      <div class="cn"><span class="dot${dotCls}"></span>${c.label}</div>
+      <div class="crow">
+        <button class="cbtn" onclick="ac('${c.id}',-1)">−</button>
+        <div class="cdsp">
+          <span class="ccur" id="cur-${c.id}">0</span>
+          <span class="csep">/</span>
+          <div class="cmxw">
+            <span class="cmxl">MÁX</span>
+            <input class="cmx" id="mx-${c.id}" type="number" value="${c.max}" min="1"
+              onchange="sm('${c.id}',this.value)" onclick="this.select()">
           </div>
         </div>
-        <div class="cn"><span class="dot${dotCls}"></span>${c.label}</div>
-        <div class="crow">
-          <button class="cbtn" onclick="ac('talisma',-1)">−</button>
-          <div class="cdsp">
-            <span class="ccur" id="cur-talisma">6</span>
-            <span class="csep">/</span>
-            <div class="cmxw">
-              <span class="cmxl">MÁX</span>
-              <input class="cmx" id="mx-talisma" type="number" value="6" min="1"
-                onchange="setTalismaMax(this.value)" onclick="this.select()">
-            </div>
-          </div>
-          <button class="cbtn" onclick="ac('talisma',+1)">+</button>
-        </div>
-        <div class="cbw"><div class="cbar" id="bar-talisma"></div></div>
-        <button class="talisma-reset-btn" onclick="resetTalisma()">↺ REINICIAR</button>`;
-    } else {
-      card.innerHTML=`
-        <div class="cn"><span class="dot${dotCls}"></span>${c.label}</div>
-        <div class="crow">
-          <button class="cbtn" onclick="ac('${c.id}',-1)">−</button>
-          <div class="cdsp">
-            <span class="ccur" id="cur-${c.id}">0</span>
-            <span class="csep">/</span>
-            <div class="cmxw">
-              <span class="cmxl">MÁX</span>
-              <input class="cmx" id="mx-${c.id}" type="number" value="${c.max}" min="1"
-                onchange="sm('${c.id}',this.value)" onclick="this.select()">
-            </div>
-          </div>
-          <button class="cbtn" onclick="ac('${c.id}',1)">+</button>
-        </div>
-        <div class="cbw"><div class="cbar" id="bar-${c.id}"></div></div>`;
-    }
+        <button class="cbtn" onclick="ac('${c.id}',1)">+</button>
+      </div>
+      <div class="cbw"><div class="cbar" id="bar-${c.id}"></div></div>`;
     g.appendChild(card);
   });
-
-  // Inicializa talismã com máx 6 e integridade 0
-  CS.talisma.cur = 6;
-  CS.talisma.max = 6;
-  updateTalismaVisual();
+  // Init vitalidade
+  const cat=Math.max(1,parseInt(document.getElementById('fcat')?.value)||1);
+  CS.vitalidade.max=vitalMax(cat);
+  CS.vitalidade.cur=CS.vitalidade.max;
+  document.getElementById('mx-vitalidade').value=CS.vitalidade.max;
   CONDS.forEach(c=>rc(c.id));
 }
 
 function rc(id){
-  const s=CS[id],full=s.cur>=s.max,pct=s.max>0?Math.min(s.cur/s.max,1)*100:0;
-  document.getElementById('cur-'+id).textContent=s.cur;
-  document.getElementById('cur-'+id).className='ccur'+(full?' maxed':'');
-  document.getElementById('bar-'+id).style.width=pct+'%';
-  document.getElementById('bar-'+id).className='cbar'+(full?' full':'');
+  const s=CS[id];
+  const full=s.cur>=s.max;
+  const neg=s.cur<0;
+  const absVal=Math.abs(s.cur);
+  const pct=s.max>0?Math.min(absVal/s.max,1)*100:0;
 
-  if(id==='talisma'){
-    const card=document.getElementById('card-talisma');
-    const lvl=Math.min(talismaIntegrity,3);
-    card.classList.remove('crack-0','crack-1','crack-2','crack-3');
-    card.classList.add('crack-'+lvl);
-    if(s.cur===1){ card.classList.add('talisma-danger'); }
-    else          { card.classList.remove('talisma-danger'); }
-    document.getElementById('cur-talisma').className='ccur';
+  const curEl=document.getElementById('cur-'+id);
+  const barEl=document.getElementById('bar-'+id);
+  const card=document.getElementById('card-'+id);
+  if(!curEl)return;
+
+  curEl.textContent=s.cur;
+  barEl.style.width=pct+'%';
+
+  if(id==='vitalidade'){
+    const halfNeg=neg && Math.abs(s.cur)>=(s.max/2);
+    // Number: white when positive, red when negative
+    curEl.className='ccur'+(neg?' vita-neg':'');
+    barEl.className='cbar'+(full?' full':neg?' negb':'');
+    card.className='cc';
+    if(halfNeg) card.classList.add('vita-critical');
   } else {
-    document.getElementById('card-'+id).className='cc'+(full?' danger':'');
+    curEl.className='ccur'+(full?' maxed':'');
+    barEl.className='cbar'+(full?' full':'');
+    card.className='cc'+(full?' danger':'');
   }
 }
 
 function ac(id,d){
   if(isRO)return;
-
-  if(id==='talisma'){
-    const newVal = CS.talisma.cur + d;
-    if(newVal > CS.talisma.max){ onChange(); return; }
-    if(newVal <= 0){
-      talismaIntegrity = Math.min(talismaIntegrity + 1, 3);
-      CS.talisma.max = talismaMaxForCurrentLevel();
-      CS.talisma.cur = CS.talisma.max;
-      updateTalismaVisual();
-      rc('talisma');
-      const card = document.getElementById('card-talisma');
-      card.classList.add('talisma-break');
-      card.addEventListener('animationend', ()=>card.classList.remove('talisma-break'), {once:true});
-      CS.ferimento.cur = Math.min(CS.ferimento.cur + 1, CS.ferimento.max);
-      rc('ferimento');
-      const fc = document.getElementById('card-ferimento');
-      fc.style.boxShadow='0 0 0 3px var(--red)';
-      setTimeout(()=>{ fc.style.boxShadow=''; }, 900);
-    } else {
-      CS.talisma.cur = newVal;
-      rc('talisma');
-    }
-    onChange(); return;
+  if(id==='vitalidade'){
+    // Vitalidade pode ser negativa
+    CS[id].cur=Math.min(CS[id].cur+d, CS[id].max);
+  } else {
+    CS[id].cur=Math.max(0,Math.min(CS[id].cur+d,CS[id].max));
   }
-
-  // Bloqueia negativos — mínimo é 0
-  CS[id].cur = Math.max(0, Math.min(CS[id].cur + d, CS[id].max));
   rc(id); onChange();
 }
 
-function resetTalisma(){
+function sm(id,v){
   if(isRO)return;
-  talismaIntegrity=0;
-  CS.talisma.max=talismaMaxForCurrentLevel();
-  CS.talisma.cur=CS.talisma.max;
-  updateTalismaVisual();
-  rc('talisma');
-  onChange();
+  const n=parseInt(v,10);
+  if(isNaN(n)||n<1)return;
+  CS[id].max=n;
+  document.getElementById('mx-'+id).value=n;
+  rc(id); onChange();
 }
-
-function sm(id,v){if(isRO)return;const n=parseInt(v,10);if(isNaN(n)||n<1)return;CS[id].max=n;document.getElementById('mx-'+id).value=n;rc(id);onChange();}
-
 
 /* ═══ SKILLS ═══ */
 function buildSkills(){
   const g=document.getElementById('sg');
+  const cat=Math.max(1,parseInt(gv('fcat'))||1);
+
+  // Header with skill points counter
+  const hdr=document.createElement('div');
+  hdr.style.cssText='grid-column:1/-1;display:flex;align-items:center;gap:.6rem;padding-bottom:.4rem;border-bottom:1px solid var(--greyDim);margin-bottom:.2rem;';
+  hdr.innerHTML=`
+    <span style="font-family:'Share Tech Mono',monospace;font-size:.52rem;letter-spacing:.18em;color:var(--grey);text-transform:uppercase;">PONTOS DISPONÍVEIS</span>
+    <span id="skill-pts" style="font-family:'Bebas Neue',cursive;font-size:1.2rem;color:var(--neon);text-shadow:0 0 8px var(--neonGlow);">0</span>
+    <span style="font-family:'Share Tech Mono',monospace;font-size:.48rem;color:var(--greyDim);">(limite por perícia = CAT)</span>`;
+  g.appendChild(hdr);
 
   // Perícias normais
   SKILLS.forEach(nm=>{
-    const sid='sv-'+nm;
+    const sid='sv-'+nm.replace(/[^a-zA-Z]/g,'');
+    const capId='scap-'+nm.replace(/[^a-zA-Z]/g,'');
     const r=document.createElement('div');r.className='sr';
     r.innerHTML=`
       <span class="sn">${nm}</span>
       <div class="sc">
         <button class="skb" onclick="ask('${nm}',-1)">−</button>
         <span class="sv" id="${sid}">0</span>
+        <span class="psique-tag" id="${capId}" style="min-width:2rem;opacity:.5">/ ${cat}</span>
         <button class="skb" onclick="ask('${nm}',1)">+</button>
       </div>`;
     g.appendChild(r);
   });
 
-  // Psique — bloqueada, controlada por CAT
+  // Psique — bloqueada, = CAT
   const psRow=document.createElement('div');psRow.className='sr';
-  const cat=parseInt(gv('fcat'))||1;
   psRow.innerHTML=`
     <span class="sn locked">${PSIQUE_KEY}</span>
     <div class="sc" style="flex-direction:column;align-items:flex-end;gap:1px">
@@ -1119,54 +1089,90 @@ function buildSkills(){
       <span class="psique-tag">= CAT</span>
     </div>`;
   g.appendChild(psRow);
+
+  refreshSkillPoints();
 }
+
 function ask(nm,d){
   if(isRO)return;
-  if(nm===PSIQUE_KEY)return; // imutável
-  SS[nm]+=d;
-  const el=document.getElementById('sv-'+nm);
-  el.textContent=SS[nm];
-  el.className='sv'+(SS[nm]<0?' neg':'');
+  if(nm===PSIQUE_KEY)return;
+  const cat=Math.max(1,Math.min(7,parseInt(gv('fcat'))||1));
+  const newVal=SS[nm]+d;
+  // Bloqueia acima do CAT
+  if(newVal>cat) return;
+  // Bloqueia abaixo de 0
+  if(newVal<0) return;
+  // Bloqueia gastar acima do pool disponível
+  const totalPool=cat*2+1;
+  const used=SKILLS.reduce((acc,s)=>acc+(SS[s]||0),0);
+  if(d>0 && used>=totalPool) return;
+  SS[nm]=newVal;
+  const el=document.getElementById('sv-'+nm.replace(/[^a-zA-Z]/g,''));
+  if(el) el.textContent=SS[nm];
+  refreshSkillPoints();
   onChange();
 }
+
+/* ═══ TRAITS ═══ */
+function renderTraits(){
+  const list=document.getElementById('trait-list');
+  if(!list) return;
+  list.innerHTML='';
+  traits.forEach((t,i)=>{
+    const row=document.createElement('div');
+    row.className='trait-row';
+    row.innerHTML=`
+      <input class="trait-input" type="text" value="${t.replace(/"/g,'&quot;')}" placeholder="Descrição do trait…"
+        oninput="traits[${i}]=this.value;onChange()" ${isRO?'disabled':''}>
+      ${isRO?'':'<button class="trait-del" onclick="removeTrait('+i+')">✕</button>'}`;
+    list.appendChild(row);
+  });
+  const addBtn=document.querySelector('.trait-add-btn');
+  if(addBtn) addBtn.style.display=isRO?'none':'block';
+}
+function addTrait(){ if(isRO)return; traits.push(''); renderTraits(); onChange(); }
+function removeTrait(i){ if(isRO)return; traits.splice(i,1); renderTraits(); onChange(); }
 
 /* ═══ COLLECT / APPLY ═══ */
 function collect(){
   const conds={};CONDS.forEach(c=>{conds[c.id]={cur:CS[c.id].cur,max:CS[c.id].max};});
-  const skills={...SS};
-  return{v:9,nome:gv('fn'),cain:gv('fc'),semente:gv('fs'),cat:gv('fcat'),missoes:gv('fm'),scrip:gv('fsc'),aflicoes:gv('fa'),origem:gv('forigem'),xp:xpCur,av:avCur,conds,skills,agenda:gv('tag'),blasfemia:gv('tbl'),marcas:gv('tmk'),inventario:gv('tinv'),talismaIntegrity,talismaBaseMax};
+  return{v:10,nome:gv('fn'),cain:gv('fc'),semente:gv('fs'),cat:gv('fcat'),missoes:gv('fm'),scrip:gv('fsc'),aflicoes:gv('fa'),origem:gv('forigem'),xp:xpCur,av:avCur,catPointsSpent,conds,skills:{...SS},agenda:gv('tag'),blasfemia:gv('tbl'),marcas:gv('tmk'),inventario:gv('tinv'),traits:[...traits]};
 }
+
 function applyData(d){
   if(!d)return;
   sv('fn',d.nome);sv('fc',d.cain);sv('fs',d.semente);
   sv('fcat',d.cat||'1');sv('fm',d.missoes||'0');sv('fsc',d.scrip);sv('fa',d.aflicoes);
-  if(d.origem){sv('forigem',d.origem);}
-  if(d.xp!=null)xpCur=d.xp;
-  if(d.av!=null){avCur=d.av;rav();}
+  if(d.origem) sv('forigem',d.origem);
+  if(d.xp!=null) xpCur=d.xp;
+  if(d.av!=null){ avCur=d.av; rav(); }
+  if(d.catPointsSpent!=null){ catPointsSpent=d.catPointsSpent; }
   rxp();
-  // Restaura integridade do talismã
-  if(d.talismaBaseMax!=null) talismaBaseMax=d.talismaBaseMax;
-  if(d.talismaIntegrity!=null){
-    talismaIntegrity=Math.min(d.talismaIntegrity,3);
-    updateTalismaVisual();
-  }
-  if(d.conds){CONDS.forEach(c=>{if(d.conds[c.id]){CS[c.id].cur=d.conds[c.id].cur;CS[c.id].max=d.conds[c.id].max;if(c.id!=='talisma'){document.getElementById('mx-'+c.id).value=CS[c.id].max;}rc(c.id);}});}
+  refreshCatPoints();
+  if(d.conds){CONDS.forEach(c=>{if(d.conds[c.id]){CS[c.id].cur=d.conds[c.id].cur;CS[c.id].max=d.conds[c.id].max;document.getElementById('mx-'+c.id).value=CS[c.id].max;rc(c.id);}});}
   if(d.skills){
     SKILLS.forEach(nm=>{
       if(d.skills[nm]!=null){
         SS[nm]=d.skills[nm];
-        const el=document.getElementById('sv-'+nm);
-        if(el){el.textContent=SS[nm];el.className='sv'+(SS[nm]<0?' neg':'');}
+        const el=document.getElementById('sv-'+nm.replace(/[^a-zA-Z]/g,''));
+        if(el) el.textContent=SS[nm];
       }
     });
   }
   const cat=Math.max(1,Math.min(7,parseInt(d.cat)||1));
-  SS[PSIQUE_KEY]=Math.ceil(cat/2);
+  SS[PSIQUE_KEY]=cat;
   const pEl=document.getElementById('sv-Psique');
-  if(pEl){pEl.textContent=cat;pEl.className='sv neon';}
+  if(pEl){pEl.textContent=SS[PSIQUE_KEY];pEl.className='sv neon';}
+  updateSkillCaps();
+  refreshSkillPoints();
+  CS.vitalidade.max=vitalMax(cat);
+  const mxEl=document.getElementById('mx-vitalidade');
+  if(mxEl) mxEl.value=CS.vitalidade.max;
+  rc('vitalidade');
   [['tag',d.agenda],['tbl',d.blasfemia],['tmk',d.marcas],['tinv',d.inventario]].forEach(([id,v])=>{
     const el=document.getElementById(id);if(el&&v!=null){el.value=v;grow(el);}
   });
+  if(d.traits){ traits=d.traits; renderTraits(); }
 }
 
 /* ═══ SHARE — URL comprimida ═══ */
@@ -1229,6 +1235,8 @@ buildCards();
 buildSkills();
 document.querySelectorAll('.ta').forEach(t=>grow(t));
 rxp();
+refreshCatPoints();
+renderTraits();
 
 (function boot(){
   let search='';try{search=location.search;}catch(e){}
